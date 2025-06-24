@@ -1,0 +1,118 @@
+// UsuarioController.java
+package com.controlescolar.controllers;
+
+import com.controlescolar.models.Usuario;
+import com.controlescolar.enums.Rol;
+import com.controlescolar.utils.DatabaseUtil;
+import com.controlescolar.utils.SecurityUtil;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+import org.bson.Document;
+import org.bson.types.ObjectId;
+import java.util.ArrayList;
+import java.util.List;
+
+public class UsuarioController {
+    private static MongoCollection<Document> collection = DatabaseUtil.getCollection("usuarios");
+
+    public static boolean crearUsuario(Usuario usuario) {
+        try {
+            // Verificar si el email ya existe
+            if (collection.find(Filters.eq("email", usuario.getEmail())).first() != null) {
+                return false; // Email ya existe
+            }
+
+            // Encriptar contraseña
+            usuario.setPassword(SecurityUtil.hashPassword(usuario.getPassword()));
+
+            collection.insertOne(usuario.toDocument());
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error al crear usuario: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean actualizarUsuario(Usuario usuario) {
+        try {
+            Document updateDoc = new Document()
+                    .append("nombre", usuario.getNombre())
+                    .append("apellidos", usuario.getApellidos())
+                    .append("telefono", usuario.getTelefono())
+                    .append("foto", usuario.getFoto())
+                    .append("activo", usuario.isActivo());
+
+            collection.updateOne(
+                    Filters.eq("_id", usuario.getId()),
+                    new Document("$set", updateDoc)
+            );
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error al actualizar usuario: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean cambiarPassword(ObjectId usuarioId, String passwordActual, String passwordNueva) {
+        try {
+            Document userDoc = collection.find(Filters.eq("_id", usuarioId)).first();
+
+            if (userDoc != null && SecurityUtil.verifyPassword(passwordActual, userDoc.getString("password"))) {
+                String hashedPassword = SecurityUtil.hashPassword(passwordNueva);
+                collection.updateOne(
+                        Filters.eq("_id", usuarioId),
+                        Updates.set("password", hashedPassword)
+                );
+                return true;
+            }
+        } catch (Exception e) {
+            System.err.println("Error al cambiar contraseña: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public static List<Usuario> obtenerUsuarios() {
+        List<Usuario> usuarios = new ArrayList<>();
+        try {
+            collection.find().forEach(doc -> usuarios.add(Usuario.fromDocument(doc)));
+        } catch (Exception e) {
+            System.err.println("Error al obtener usuarios: " + e.getMessage());
+        }
+        return usuarios;
+    }
+
+    public static List<Usuario> obtenerUsuariosPorRol(Rol rol) {
+        List<Usuario> usuarios = new ArrayList<>();
+        try {
+            collection.find(Filters.eq("rol", rol.toString()))
+                    .forEach(doc -> usuarios.add(Usuario.fromDocument(doc)));
+        } catch (Exception e) {
+            System.err.println("Error al obtener usuarios por rol: " + e.getMessage());
+        }
+        return usuarios;
+    }
+
+    public static Usuario obtenerUsuarioPorId(ObjectId id) {
+        try {
+            Document doc = collection.find(Filters.eq("_id", id)).first();
+            return doc != null ? Usuario.fromDocument(doc) : null;
+        } catch (Exception e) {
+            System.err.println("Error al obtener usuario por ID: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public static boolean eliminarUsuario(ObjectId id) {
+        try {
+            collection.updateOne(
+                    Filters.eq("_id", id),
+                    Updates.set("activo", false)
+            );
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error al eliminar usuario: " + e.getMessage());
+            return false;
+        }
+    }
+}

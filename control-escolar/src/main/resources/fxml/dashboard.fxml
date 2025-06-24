@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.controlescolar.views.DashboardView" stylesheets="@../css/styles.css">
+    <top>
+        <!-- Barra superior -->
+        <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="header-bar">
+            <children>
+                <Label styleClass="header-title" text="Dashboard">
+                    <font>
+                        <Font name="System Bold" size="20.0" />
+                    </font>
+                </Label>
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="lblUsuarioActual" styleClass="user-info" text="Usuario: Admin" />
+                <Separator orientation="VERTICAL" />
+                <Label fx:id="lblFechaHora" styleClass="date-time" text="Fecha y Hora" />
+                <Button fx:id="btnCerrarSesion" onAction="#handleCerrarSesion" styleClass="logout-button" text="Cerrar Sesión" />
+            </children>
+            <padding>
+                <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
+            </padding>
+        </HBox>
+    </top>
+
+    <left>
+        <!-- Menu lateral -->
+        <VBox prefWidth="200.0" styleClass="sidebar">
+            <children>
+                <Label styleClass="sidebar-title" text="Navegación">
+                    <font>
+                        <Font name="System Bold" size="14.0" />
+                    </font>
+                </Label>
+
+                <VBox spacing="5.0" styleClass="menu-section">
+                    <children>
+                        <Button fx:id="btnAlumnos" maxWidth="1.7976931348623157E308" onAction="#handleAlumnos" styleClass="menu-button" text="👥 Alumnos" />
+                        <Button fx:id="btnProfesores" maxWidth="1.7976931348623157E308" onAction="#handleProfesores" styleClass="menu-button" text="👨‍🏫 Profesores" />
+                        <Button fx:id="btnMaterias" maxWidth="1.7976931348623157E308" onAction="#handleMaterias" styleClass="menu-button" text="📚 Materias" />
+                        <Button fx:id="btnCalificaciones" maxWidth="1.7976931348623157E308" onAction="#handleCalificaciones" styleClass="menu-button" text="📋 Calificaciones" />
+                        <Button fx:id="btnAsistencia" maxWidth="1.7976931348623157E308" onAction="#handleAsistencia" styleClass="menu-button" text="✅ Asistencia" />
+                        <Button fx:id="btnPagos" maxWidth="1.7976931348623157E308" onAction="#handlePagos" styleClass="menu-button" text="💰 Pagos" />
+                        <Button fx:id="btnReportes" maxWidth="1.7976931348623157E308" onAction="#handleReportes" styleClass="menu-button" text="📊 Reportes" />
+                    </children>
+                </VBox>
+            </children>
+            <padding>
+                <Insets bottom="20.0" left="15.0" right="15.0" top="20.0" />
+            </padding>
+        </VBox>
+    </left>
+
+    <center>
+        <!-- Contenido principal -->
+        <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+            <content>
+                <VBox spacing="20.0" styleClass="dashboard-content">
+                    <children>
+                        <!-- Tarjetas de resumen -->
+                        <GridPane hgap="20.0" vgap="20.0">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" />
+                                <ColumnConstraints hgrow="SOMETIMES" />
+                                <ColumnConstraints hgrow="SOMETIMES" />
+                                <ColumnConstraints hgrow="SOMETIMES" />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints vgrow="SOMETIMES" />
+                            </rowConstraints>
+                            <children>
+                                <!-- Tarjeta Alumnos -->
+                                <VBox alignment="CENTER" styleClass="stats-card" GridPane.columnIndex="0">
+                                    <children>
+                                        <Label styleClass="stats-number" fx:id="lblTotalAlumnos" text="0">
+                                            <font>
+                                                <Font name="System Bold" size="24.0" />
+                                            </font>
+                                        </Label>
+                                        <Label styleClass="stats-label" text="Alumnos" />
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                    </padding>
+                                </VBox>
+
+                                <!-- Tarjeta Profesores -->
+                                <VBox alignment="CENTER" styleClass="stats-card" GridPane.columnIndex="1">
+                                    <children>
+                                        <Label styleClass="stats-number" fx:id="lblTotalProfesores" text="0">
+                                            <font>
+                                                <Font name="System Bold" size="24.0" />
+                                            </font>
+                                        </Label>
+                                        <Label styleClass="stats-label" text="Profesores" />
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                    </padding>
+                                </VBox>
+
+                                <!-- Tarjeta Materias -->
+                                <VBox alignment="CENTER" styleClass="stats-card" GridPane.columnIndex="2">
+                                    <children>
+                                        <Label styleClass="stats-number" fx:id="lblTotalMaterias" text="0">
+                                            <font>
+                                                <Font name="System Bold" size="24.0" />
+                                            </font>
+                                        </Label>
+                                        <Label styleClass="stats-label" text="Materias" />
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                    </padding>
+                                </VBox>
+
+                                <!-- Tarjeta Pagos Pendientes -->
+                                <VBox alignment="CENTER" styleClass="stats-card warning" GridPane.columnIndex="3">
+                                    <children>
+                                        <Label styleClass="stats-number" fx:id="lblPagosPendientes" text="0">
+                                            <font>
+                                                <Font name="System Bold" size="24.0" />
+                                            </font>
+                                        </Label>
+                                        <Label styleClass="stats-label" text="Pagos Pendientes" />
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                    </padding>
+                                </VBox>
+                            </children>
+                        </GridPane>
+
+                        <!-- Gráficas y datos -->
+                        <HBox spacing="20.0">
+                            <children>
+                                <!-- Gráfica de pagos -->
+                                <VBox styleClass="chart-container" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label styleClass="chart-title" text="Estado de Pagos">
+                                            <font>
+                                                <Font name="System Bold" size="16.0" />
+                                            </font>
+                                        </Label>
+                                        <PieChart fx:id="chartPagos" prefHeight="300.0" />
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                    </padding>
+                                </VBox>
+
+                                <!-- Actividad reciente -->
+                                <VBox prefWidth="350.0" styleClass="activity-container">
+                                    <children>
+                                        <Label styleClass="activity-title" text="Actividad Reciente">
+                                            <font>
+                                                <Font name="System Bold" size="16.0" />
+                                            </font>
+                                        </Label>
+                                        <ListView fx:id="listActividadReciente" prefHeight="300.0" styleClass="activity-list" />
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                    </padding>
+                                </VBox>
+                            </children>
+                        </HBox>
+
+                        <!-- Alertas y notificaciones -->
+                        <VBox styleClass="alerts-container">
+                            <children>
+                                <Label styleClass="alerts-title" text="Alertas y Notificaciones">
+                                    <font>
+                                        <Font name="System Bold" size="16.0" />
+                                    </font>
+                                </Label>
+                                <ListView fx:id="listAlertas" prefHeight="150.0" styleClass="alerts-list" />
+                            </children>
+                            <padding>
+                                <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                            </padding>
+                        </VBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                    </padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.controlescolar.views.ReportesView" stylesheets="@../css/styles.css">
+    <top>
+        <HBox spacing="10" padding="10">
+            <children>
+                <Label text="Generación de Reportes" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="btnVolver" text="← Volver" onAction="#handleVolver" />
+            </children>
+        </HBox>
+    </top>
+    <center>
+        <VBox spacing="10" padding="10">
+            <children>
+                <Button fx:id="btnReporteCalificaciones" text="Reporte de Calificaciones" onAction="#handleReporteCalificaciones" />
+                <Button fx:id="btnReportePagos" text="Reporte de Pagos" onAction="#handleReportePagos" />
+                <Button fx:id="btnReporteAsistencia" text="Reporte de Asistencia" onAction="#handleReporteAsistencia" />
+            </children>
+        </VBox>
+    </center>
+</BorderPane>

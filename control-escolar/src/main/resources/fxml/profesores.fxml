@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.controlescolar.views.ProfesoresView">
+
+    <top>
+        <VBox styleClass="toolbar-container" spacing="10.0" padding="10">
+            <children>
+                <!-- Título -->
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <children>
+                        <Label styleClass="page-title" text="Gestión de Profesores">
+                            <font>
+                                <Font name="System Bold" size="18.0" />
+                            </font>
+                        </Label>
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnVolver" onAction="#handleVolver" styleClass="back-button" text="← Volver" />
+                    </children>
+                </HBox>
+
+                <!-- Barra de búsqueda y filtros -->
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <children>
+                        <TextField fx:id="txtBuscar"
+                                   onKeyReleased="#handleBuscar"
+                                   prefWidth="300.0"
+                                   promptText="Buscar por nombre, email o especialidad..."
+                                   styleClass="search-field" />
+                        <ComboBox fx:id="cmbFiltroEspecialidad"
+                                  onAction="#handleFiltrar"
+                                  prefWidth="150.0"
+                                  promptText="Especialidad"
+                                  styleClass="filter-combo" />
+                        <ComboBox fx:id="cmbFiltroEstado"
+                                  onAction="#handleFiltrar"
+                                  prefWidth="120.0"
+                                  promptText="Estado"
+                                  styleClass="filter-combo" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+
+    <center>
+        <!-- Tabla de profesores -->
+        <TableView fx:id="tablaProfesores" prefHeight="400.0" styleClass="custom-table" stylesheets="@../css/styles.css">
+            <columns>
+                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="150" />
+                <TableColumn fx:id="colEmail" text="Correo Electrónico" prefWidth="200" />
+                <TableColumn fx:id="colEspecialidad" text="Especialidad" prefWidth="150" />
+                <TableColumn fx:id="colEstado" text="Estado" prefWidth="100" />
+            </columns>
+        </TableView>
+    </center>
+
+    <bottom>
+        <!-- Botones de acción -->
+        <HBox alignment="CENTER_RIGHT" spacing="10.0" padding="10">
+            <children>
+                <Button fx:id="btnAgregar" onAction="#handleAgregar" text="Agregar" />
+                <Button fx:id="btnEditar" onAction="#handleEditar" text="Editar" />
+                <Button fx:id="btnEliminar" onAction="#handleEliminar" text="Eliminar" />
+            </children>
+        </HBox>
+    </bottom>
+
+</BorderPane>

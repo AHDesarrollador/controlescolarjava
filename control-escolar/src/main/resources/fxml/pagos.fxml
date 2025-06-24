@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.controlescolar.views.PagosView"
+        stylesheets="@../css/styles.css">
+
+    <top>
+        <HBox spacing="10" padding="10">
+            <children>
+                <Label text="Gestión de Pagos" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="btnVolver" text="← Volver" onAction="#handleVolver" />
+            </children>
+        </HBox>
+    </top>
+    <center>
+        <TableView fx:id="tablaPagos">
+            <columns>
+                <TableColumn fx:id="colAlumno" text="Alumno" />
+                <TableColumn fx:id="colMonto" text="Monto" />
+                <TableColumn fx:id="colFecha" text="Fecha" />
+                <TableColumn fx:id="colEstado" text="Estado" />
+            </columns>
+        </TableView>
+    </center>
+    <bottom>
+        <HBox spacing="10" alignment="CENTER_RIGHT" padding="10">
+            <children>
+                <Button fx:id="btnRegistrar" text="Registrar" onAction="#handleRegistrar" />
+                <Button fx:id="btnEditar" text="Editar" onAction="#handleEditar" />
+                <Button fx:id="btnEliminar" text="Eliminar" onAction="#handleEliminar" />
+            </children>
+        </HBox>
+    </bottom>
+</BorderPane>

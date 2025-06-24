@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.controlescolar.views.LoginView" stylesheets="@../css/styles.css">
+    <center>
+        <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="400.0" spacing="20.0" styleClass="login-container">
+            <children>
+                <!-- Logo y título -->
+                <VBox alignment="CENTER" spacing="10.0">
+                    <children>
+                        <ImageView fitHeight="80.0" fitWidth="80.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../images/icons/school-logo.png" />
+                            </image>
+                        </ImageView>
+                        <Label styleClass="login-title" text="Sistema Control Escolar">
+                            <font>
+                                <Font name="System Bold" size="24.0" />
+                            </font>
+                        </Label>
+                        <Label styleClass="login-subtitle" text="Ingresa tus credenciales">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Label>
+                    </children>
+                </VBox>
+
+                <!-- Formulario de login -->
+                <VBox spacing="15.0" styleClass="login-form">
+                    <children>
+                        <!-- Campo Usuario -->
+                        <VBox spacing="5.0">
+                            <children>
+                                <Label text="Usuario:" />
+                                <TextField fx:id="txtUsuario" prefHeight="40.0" promptText="Ingresa tu usuario" styleClass="input-field" />
+                            </children>
+                        </VBox>
+
+                        <!-- Campo Contraseña -->
+                        <VBox spacing="5.0">
+                            <children>
+                                <Label text="Contraseña:" />
+                                <PasswordField fx:id="txtPassword" prefHeight="40.0" promptText="Ingresa tu contraseña" styleClass="input-field" />
+                            </children>
+                        </VBox>
+
+                        <!-- Recordar usuario -->
+                        <CheckBox fx:id="chkRecordarUsuario" mnemonicParsing="false" text="Recordar usuario" />
+
+                        <!-- Mensaje de error -->
+                        <Label fx:id="lblError" styleClass="error-message" textFill="RED" visible="false" wrapText="true" />
+
+                        <!-- Botones -->
+                        <VBox spacing="10.0">
+                            <children>
+                                <Button fx:id="btnLogin" defaultButton="true" maxWidth="1.7976931348623157E308" onAction="#handleLogin" prefHeight="45.0" styleClass="primary-button" text="Iniciar Sesión" />
+                                <Button fx:id="btnOlvidoPassword" maxWidth="1.7976931348623157E308" onAction="#handleOlvidoPassword" prefHeight="35.0" styleClass="secondary-button" text="¿Olvidaste tu contraseña?" />
+                            </children>
+                        </VBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="20.0" left="40.0" right="40.0" top="20.0" />
+                    </padding>
+                </VBox>
+
+                <!-- Footer -->
+                <VBox alignment="CENTER" spacing="5.0">
+                    <children>
+                        <Separator prefWidth="200.0" />
+                        <Label styleClass="footer-text" text="© 2024 Sistema Control Escolar v1.0">
+                            <font>
+                                <Font size="12.0" />
+                            </font>
+                        </Label>
+                    </children>
+                </VBox>
+            </children>
+            <padding>
+                <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+            </padding>
+        </VBox>
+    </center>
+</BorderPane>

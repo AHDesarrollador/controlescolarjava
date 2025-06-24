@@ -1,0 +1,103 @@
+/* General */
+.root {
+    -fx-font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+    -fx-background-color: #f4f6f9;
+}
+
+/* Títulos */
+.page-title {
+    -fx-font-size: 20px;
+    -fx-text-fill: #333;
+    -fx-font-weight: bold;
+}
+
+/* Botones */
+.button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 4, 0, 0, 2);
+}
+
+.button:hover {
+    -fx-background-color: #2980b9;
+}
+
+.back-button {
+    -fx-background-color: #95a5a6;
+}
+
+.back-button:hover {
+    -fx-background-color: #7f8c8d;
+}
+
+/* TextField y ComboBox */
+.text-field, .combo-box {
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-border-color: #ccc;
+    -fx-border-width: 1;
+    -fx-padding: 6 10;
+}
+
+.search-field {
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+}
+
+/* Tabla */
+.table-view {
+    -fx-border-color: #ccc;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-table-cell-border-color: #e1e1e1;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #3498db;
+}
+
+.table-view .column-header, .table-view .filler {
+    -fx-size: 32px;
+    -fx-border-color: transparent;
+    -fx-alignment: CENTER-LEFT;
+}
+
+.table-view .table-column {
+    -fx-alignment: CENTER-LEFT;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+/* ScrollPane */
+.scroll-pane {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+}
+
+/* Toolbars y Contenedores */
+.toolbar-container {
+    -fx-background-color: #ffffff;
+    -fx-padding: 10;
+    -fx-border-color: #ddd;
+    -fx-border-width: 0 0 1 0;
+}
+
+.hbox, .vbox {
+    -fx-spacing: 10;
+}
+
+/* Etiquetas */
+.label {
+    -fx-text-fill: #2c3e50;
+}
+
+/* Títulos de sección */
+.section-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #34495e;
+    -fx-padding: 10 0 5 0;
+}
