@@ -40,7 +40,7 @@ public class Usuario {
         return new Document("_id", id)
                 .append("email", email)
                 .append("password", password)
-                .append("rol", rol.toString())
+                .append("rol", rol.name())
                 .append("nombre", nombre)
                 .append("apellidos", apellidos)
                 .append("telefono", telefono)
@@ -55,14 +55,50 @@ public class Usuario {
         usuario.setId(doc.getObjectId("_id"));
         usuario.setEmail(doc.getString("email"));
         usuario.setPassword(doc.getString("password"));
-        usuario.setRol(Rol.valueOf(doc.getString("rol")));
+        // Parse rol with fallback for nombre-based values
+        String rolString = doc.getString("rol");
+        Rol rol = null;
+        try {
+            rol = Rol.valueOf(rolString);
+        } catch (IllegalArgumentException e) {
+            // Try by nombre if valueOf fails
+            rol = Rol.fromNombre(rolString);
+            if (rol == null) {
+                // Try some common mappings for legacy data
+                if ("admin".equalsIgnoreCase(rolString) || "ADMIN".equals(rolString) || "administrador".equalsIgnoreCase(rolString)) {
+                    rol = Rol.ADMINISTRADOR;
+                } else if ("profesor".equalsIgnoreCase(rolString) || "teacher".equalsIgnoreCase(rolString)) {
+                    rol = Rol.PROFESOR;
+                } else if ("alumno".equalsIgnoreCase(rolString) || "student".equalsIgnoreCase(rolString)) {
+                    rol = Rol.ALUMNO;
+                } else if ("director".equalsIgnoreCase(rolString)) {
+                    rol = Rol.DIRECTOR;
+                } else {
+                    // If all fails, log the issue and default to ALUMNO
+                    System.err.println("Unknown role string: " + rolString + ", defaulting to ALUMNO");
+                    rol = Rol.ALUMNO;
+                }
+            }
+        }
+        usuario.setRol(rol);
         usuario.setNombre(doc.getString("nombre"));
         usuario.setApellidos(doc.getString("apellidos"));
         usuario.setTelefono(doc.getString("telefono"));
         usuario.setFoto(doc.getString("foto"));
         usuario.setActivo(doc.getBoolean("activo", true));
-        usuario.setFechaCreacion(doc.get("fechaCreacion", LocalDateTime.class));
-        usuario.setUltimoAcceso(doc.get("ultimoAcceso", LocalDateTime.class));
+        Object fechaCreacionObj = doc.get("fechaCreacion");
+        if (fechaCreacionObj instanceof LocalDateTime) {
+            usuario.setFechaCreacion((LocalDateTime) fechaCreacionObj);
+        } else if (fechaCreacionObj instanceof String && !((String) fechaCreacionObj).isEmpty()) {
+            usuario.setFechaCreacion(LocalDateTime.parse((String) fechaCreacionObj));
+        }
+        
+        Object ultimoAccesoObj = doc.get("ultimoAcceso");
+        if (ultimoAccesoObj instanceof LocalDateTime) {
+            usuario.setUltimoAcceso((LocalDateTime) ultimoAccesoObj);
+        } else if (ultimoAccesoObj instanceof String && !((String) ultimoAccesoObj).isEmpty()) {
+            usuario.setUltimoAcceso(LocalDateTime.parse((String) ultimoAccesoObj));
+        }
         return usuario;
     }
 

@@ -13,6 +13,7 @@ import java.util.List;
 
 public class AlumnoController {
     private static MongoCollection<Document> collection = DatabaseUtil.getCollection("alumnos");
+    
 
     public static boolean crearAlumno(Alumno alumno) {
         try {
@@ -31,6 +32,10 @@ public class AlumnoController {
 
     public static boolean actualizarAlumno(Alumno alumno) {
         try {
+            // Verificar permisos
+            if (!AuthController.canManageStudentUsers()) {
+                return false;
+            }
             Document updateDoc = new Document()
                     .append("nombre", alumno.getNombre())
                     .append("apellidos", alumno.getApellidos())
@@ -113,5 +118,10 @@ public class AlumnoController {
             System.err.println("Error al eliminar alumno: " + e.getMessage());
             return false;
         }
+    }
+
+    // Additional methods for UI compatibility
+    public List<Alumno> obtenerTodos() {
+        return obtenerAlumnos();
     }
 }

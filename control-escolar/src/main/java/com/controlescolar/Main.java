@@ -56,7 +56,7 @@ public class Main extends Application {
                 org.bson.Document admin = new org.bson.Document()
                         .append("email", "admin@controlescolar.com")
                         .append("password", org.mindrot.jbcrypt.BCrypt.hashpw("admin123", org.mindrot.jbcrypt.BCrypt.gensalt()))
-                        .append("rol", "ADMIN")
+                        .append("rol", "ADMINISTRADOR")
                         .append("nombre", "Administrador")
                         .append("apellido", "Sistema")
                         .append("activo", true)

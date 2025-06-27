@@ -1,4 +1,4 @@
-//AlumosView.java
+//AlumnosView.java
 package com.controlescolar.views;
 
 import com.controlescolar.controllers.AlumnoController;
@@ -17,6 +17,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.scene.Node;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -145,6 +146,16 @@ public class AlumnosView extends Application {
     private TableView<Alumno> createTablaAlumnos() {
         TableView<Alumno> tabla = new TableView<>();
         tabla.setItems(listaAlumnos);
+        
+        // Estilos para mejorar la visibilidad del texto
+        tabla.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
 
         // Columnas
         TableColumn<Alumno, String> colMatricula = new TableColumn<>("Matrícula");
@@ -203,6 +214,8 @@ public class AlumnosView extends Application {
             listaAlumnos.clear();
             listaAlumnos.addAll(alumnos);
         } catch (Exception e) {
+            System.err.println("Error al cargar alumnos: " + e.getMessage());
+            e.printStackTrace();
             mostrarError("Error al cargar alumnos: " + e.getMessage());
         }
     }
@@ -453,3 +466,4 @@ public class AlumnosView extends Application {
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
+}

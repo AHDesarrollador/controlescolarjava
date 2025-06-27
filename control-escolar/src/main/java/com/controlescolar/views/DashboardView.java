@@ -13,6 +13,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
+import javafx.util.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -121,15 +124,36 @@ public class DashboardView extends Application {
 
         // Botones comunes
         addMenuButton("🏠 Inicio", () -> mostrarVistaInicial());
+        addMenuButton("👤 Mi Perfil", () -> abrirPerfil());
 
         // Botones según rol
-        if (rol == Rol.ADMIN) {
+        if (rol == Rol.ADMINISTRADOR) {
             addMenuButton("👥 Gestión de Usuarios", () -> abrirGestionUsuarios());
             addMenuButton("🎓 Gestión de Alumnos", () -> abrirGestionAlumnos());
             addMenuButton("👨‍🏫 Gestión de Profesores", () -> abrirGestionProfesores());
+            addMenuButton("👨‍👩‍👧‍👦 Gestión de Padres", () -> abrirGestionPadres());
             addMenuButton("📚 Gestión de Materias", () -> abrirGestionMaterias());
+            addMenuButton("👥 Gestión de Grupos", () -> abrirGestionGrupos());
             addMenuButton("📊 Calificaciones", () -> abrirCalificaciones());
             addMenuButton("📅 Asistencias", () -> abrirAsistencias());
+            addMenuButton("💰 Pagos", () -> abrirPagos());
+            addMenuButton("📈 Reportes", () -> abrirReportes());
+        } else if (rol == Rol.DIRECTOR) {
+            addMenuButton("👤 Gestión de Usuarios", () -> abrirGestionUsuariosDirector());
+            addMenuButton("🎓 Gestión de Alumnos", () -> abrirGestionAlumnos());
+            addMenuButton("👨‍🏫 Gestión de Profesores", () -> abrirGestionProfesores());
+            addMenuButton("👨‍👩‍👧‍👦 Gestión de Padres", () -> abrirGestionPadres());
+            addMenuButton("📚 Gestión de Materias", () -> abrirGestionMaterias());
+            addMenuButton("👥 Gestión de Grupos", () -> abrirGestionGrupos());
+            addMenuButton("📊 Calificaciones", () -> abrirCalificaciones());
+            addMenuButton("📅 Asistencias", () -> abrirAsistencias());
+            addMenuButton("💰 Pagos", () -> abrirPagos());
+            addMenuButton("📈 Reportes", () -> abrirReportes());
+        } else if (rol == Rol.SECRETARIO) {
+            addMenuButton("🎓 Gestión de Alumnos", () -> abrirGestionAlumnos());
+            addMenuButton("👨‍🏫 Gestión de Profesores", () -> abrirGestionProfesores());
+            addMenuButton("👨‍👩‍👧‍👦 Gestión de Padres", () -> abrirGestionPadres());
+            addMenuButton("👤 Editar Usuarios", () -> abrirEdicionUsuarios());
             addMenuButton("💰 Pagos", () -> abrirPagos());
             addMenuButton("📈 Reportes", () -> abrirReportes());
         } else if (rol == Rol.PROFESOR) {
@@ -243,19 +267,36 @@ public class DashboardView extends Application {
         HBox statsBox = new HBox(20);
         statsBox.setAlignment(Pos.CENTER);
 
-        // Card de alumnos
-        VBox alumnosCard = createStatCard("Alumnos", "150", "#3498db");
+        // Obtener estadísticas reales
+        try {
+            int totalAlumnos = com.controlescolar.controllers.AlumnoController.obtenerAlumnos().size();
+            int totalProfesores = com.controlescolar.controllers.ProfesorController.obtenerProfesores().size();
+            int totalMaterias = com.controlescolar.controllers.MateriaController.obtenerMaterias().size();
+            int totalGrupos = com.controlescolar.controllers.GrupoController.obtenerTodosLosGrupos().size();
 
-        // Card de profesores
-        VBox profesoresCard = createStatCard("Profesores", "25", "#2ecc71");
+            // Card de alumnos
+            VBox alumnosCard = createStatCard("Alumnos", String.valueOf(totalAlumnos), "#3498db");
 
-        // Card de materias
-        VBox materiasCard = createStatCard("Materias", "12", "#e74c3c");
+            // Card de profesores
+            VBox profesoresCard = createStatCard("Profesores", String.valueOf(totalProfesores), "#2ecc71");
 
-        // Card de grupos
-        VBox gruposCard = createStatCard("Grupos", "8", "#f39c12");
+            // Card de materias
+            VBox materiasCard = createStatCard("Materias", String.valueOf(totalMaterias), "#e74c3c");
 
-        statsBox.getChildren().addAll(alumnosCard, profesoresCard, materiasCard, gruposCard);
+            // Card de grupos
+            VBox gruposCard = createStatCard("Grupos", String.valueOf(totalGrupos), "#f39c12");
+
+            statsBox.getChildren().addAll(alumnosCard, profesoresCard, materiasCard, gruposCard);
+        } catch (Exception e) {
+            // En caso de error, mostrar datos por defecto
+            VBox alumnosCard = createStatCard("Alumnos", "---", "#3498db");
+            VBox profesoresCard = createStatCard("Profesores", "---", "#2ecc71");
+            VBox materiasCard = createStatCard("Materias", "---", "#e74c3c");
+            VBox gruposCard = createStatCard("Grupos", "---", "#f39c12");
+
+            statsBox.getChildren().addAll(alumnosCard, profesoresCard, materiasCard, gruposCard);
+            System.err.println("Error al obtener estadísticas del dashboard: " + e.getMessage());
+        }
 
         return statsBox;
     }
@@ -283,8 +324,12 @@ public class DashboardView extends Application {
 
     // Métodos para abrir diferentes vistas
     private void abrirGestionUsuarios() {
-        // TODO: Implementar vista de gestión de usuarios
-        mostrarMensajeDesarrollo("Gestión de Usuarios");
+        try {
+            GestionUsuariosView gestionUsuariosView = new GestionUsuariosView(usuarioActual);
+            gestionUsuariosView.show();
+        } catch (Exception e) {
+            mostrarError("Error al abrir gestión de usuarios: " + e.getMessage());
+        }
     }
 
     private void abrirGestionAlumnos() {
@@ -329,9 +374,9 @@ public class DashboardView extends Application {
 
     private void abrirAsistencias() {
         try {
-            AsistenciaView asistenciaView = new AsistenciaView(usuarioActual);
             Stage asistenciaStage = new Stage();
-            asistenciaView.start(asistenciaStage);
+            AsistenciaView asistenciaView = new AsistenciaView(asistenciaStage);
+            asistenciaView.show();
         } catch (Exception e) {
             mostrarError("Error al abrir asistencias: " + e.getMessage());
         }
@@ -339,9 +384,9 @@ public class DashboardView extends Application {
 
     private void abrirPagos() {
         try {
-            PagosView pagosView = new PagosView(usuarioActual);
             Stage pagosStage = new Stage();
-            pagosView.start(pagosStage);
+            PagosView pagosView = new PagosView(pagosStage);
+            pagosView.show();
         } catch (Exception e) {
             mostrarError("Error al abrir pagos: " + e.getMessage());
         }
@@ -349,7 +394,7 @@ public class DashboardView extends Application {
 
     private void abrirReportes() {
         try {
-            ReportesView reportesView = new ReportesView(usuarioActual);
+            ReportesView reportesView = new ReportesView();
             Stage reportesStage = new Stage();
             reportesView.start(reportesStage);
         } catch (Exception e) {
@@ -359,20 +404,87 @@ public class DashboardView extends Application {
 
     // Métodos específicos para profesor
     private void abrirMisGrupos() {
-        mostrarMensajeDesarrollo("Mis Grupos");
+        try {
+            MisGruposView misGruposView = new MisGruposView(usuarioActual);
+            Stage misGruposStage = new Stage();
+            misGruposView.start(misGruposStage);
+        } catch (Exception e) {
+            mostrarError("Error al abrir mis grupos: " + e.getMessage());
+        }
     }
 
     // Métodos específicos para alumno
     private void abrirMisCalificaciones() {
-        mostrarMensajeDesarrollo("Mis Calificaciones");
+        try {
+            MisCalificacionesView misCalificacionesView = new MisCalificacionesView(usuarioActual);
+            misCalificacionesView.show();
+        } catch (Exception e) {
+            mostrarError("Error al abrir mis calificaciones: " + e.getMessage());
+        }
     }
 
     private void abrirMiAsistencia() {
-        mostrarMensajeDesarrollo("Mi Asistencia");
+        try {
+            MiAsistenciaView miAsistenciaView = new MiAsistenciaView(usuarioActual);
+            miAsistenciaView.show();
+        } catch (Exception e) {
+            mostrarError("Error al abrir mi asistencia: " + e.getMessage());
+        }
     }
 
     private void abrirMisPagos() {
-        mostrarMensajeDesarrollo("Mis Pagos");
+        try {
+            MisPagosView misPagosView = new MisPagosView(usuarioActual);
+            misPagosView.show();
+        } catch (Exception e) {
+            mostrarError("Error al abrir mis pagos: " + e.getMessage());
+        }
+    }
+
+    private void abrirPerfil() {
+        try {
+            com.controlescolar.views.ProfileView profileView = new com.controlescolar.views.ProfileView(usuarioActual);
+            profileView.show();
+        } catch (Exception e) {
+            mostrarError("Error al abrir el perfil: " + e.getMessage());
+        }
+    }
+
+    private void abrirGestionGrupos() {
+        try {
+            GruposView gruposView = new GruposView(usuarioActual);
+            Stage gruposStage = new Stage();
+            gruposView.start(gruposStage);
+        } catch (Exception e) {
+            mostrarError("Error al abrir gestión de grupos: " + e.getMessage());
+        }
+    }
+
+    private void abrirGestionPadres() {
+        try {
+            GestionPadresView gestionPadresView = new GestionPadresView(primaryStage);
+            gestionPadresView.show();
+        } catch (Exception e) {
+            mostrarError("Error al abrir gestión de padres: " + e.getMessage());
+        }
+    }
+
+    private void abrirEdicionUsuarios() {
+        try {
+            EdicionUsuariosView edicionUsuariosView = new EdicionUsuariosView(primaryStage);
+            edicionUsuariosView.show();
+        } catch (Exception e) {
+            mostrarError("Error al abrir edición de usuarios: " + e.getMessage());
+        }
+    }
+
+    private void abrirGestionUsuariosDirector() {
+        try {
+            GestionUsuariosDirectorView gestionUsuariosView = new GestionUsuariosDirectorView(primaryStage);
+            gestionUsuariosView.show();
+        } catch (Exception e) {
+            mostrarError("Error al abrir gestión de usuarios: " + e.getMessage());
+        }
     }
 
     private void mostrarMensajeDesarrollo(String modulo) {

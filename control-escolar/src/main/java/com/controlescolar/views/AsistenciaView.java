@@ -85,12 +85,36 @@ public class AsistenciaView {
         comboMaterias = new ComboBox<>();
         comboMaterias.setPrefWidth(200);
         comboMaterias.setOnAction(e -> cargarGruposPorMateria());
+        
+        // StringConverter para mostrar el nombre de la materia
+        comboMaterias.setConverter(new javafx.util.StringConverter<Materia>() {
+            @Override
+            public String toString(Materia materia) {
+                return materia == null ? "" : materia.getNombre();
+            }
+            @Override
+            public Materia fromString(String string) {
+                return null;
+            }
+        });
 
         // Grupo
         Label lblGrupo = new Label("Grupo:");
         comboGrupos = new ComboBox<>();
         comboGrupos.setPrefWidth(150);
         comboGrupos.setOnAction(e -> cargarAsistencia());
+        
+        // StringConverter para mostrar el nombre del grupo
+        comboGrupos.setConverter(new javafx.util.StringConverter<Grupo>() {
+            @Override
+            public String toString(Grupo grupo) {
+                return grupo == null ? "" : grupo.getNombre();
+            }
+            @Override
+            public Grupo fromString(String string) {
+                return null;
+            }
+        });
 
         Button btnFiltrar = new Button("Filtrar");
         btnFiltrar.setOnAction(e -> cargarAsistencia());
@@ -141,7 +165,7 @@ public class AsistenciaView {
         colGrupo.setPrefWidth(100);
 
         TableColumn<Asistencia, String> colEstado = new TableColumn<>("Estado");
-        colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
+        colEstado.setCellValueFactory(new PropertyValueFactory<>("estadoString"));
         colEstado.setPrefWidth(100);
 
         // Columna de acciones con CheckBox para marcar asistencia

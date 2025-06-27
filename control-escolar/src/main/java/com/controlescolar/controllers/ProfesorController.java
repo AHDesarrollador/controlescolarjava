@@ -17,7 +17,8 @@ public class ProfesorController {
     public static boolean crearProfesor(Profesor profesor) {
         try {
             // Verificar si el número de empleado ya existe
-            if (collection.find(Filters.eq("numeroEmpleado", profesor.getNumeroEmpleado())).first() != null) {
+            if (profesor.getNumeroEmpleado() != null && 
+                collection.find(Filters.eq("numeroEmpleado", profesor.getNumeroEmpleado())).first() != null) {
                 return false; // Número de empleado ya existe
             }
 
@@ -31,15 +32,16 @@ public class ProfesorController {
 
     public static boolean actualizarProfesor(Profesor profesor) {
         try {
+            // Verificar permisos
+            if (!AuthController.canManageTeacherUsers()) {
+                return false;
+            }
             Document updateDoc = new Document()
                     .append("nombre", profesor.getNombre())
                     .append("apellidos", profesor.getApellidos())
                     .append("email", profesor.getEmail())
                     .append("telefono", profesor.getTelefono())
                     .append("especialidad", profesor.getEspecialidad())
-                    .append("titulo", profesor.getTitulo())
-                    .append("experiencia", profesor.getExperiencia())
-                    .append("salario", profesor.getSalario())
                     .append("activo", profesor.isActivo());
 
             collection.updateOne(
@@ -84,6 +86,16 @@ public class ProfesorController {
         }
     }
 
+    public static Profesor obtenerProfesorPorEmail(String email) {
+        try {
+            Document doc = collection.find(Filters.eq("email", email)).first();
+            return doc != null ? Profesor.fromDocument(doc) : null;
+        } catch (Exception e) {
+            System.err.println("Error al obtener profesor por email: " + e.getMessage());
+            return null;
+        }
+    }
+
     public static List<Profesor> buscarProfesores(String termino) {
         List<Profesor> profesores = new ArrayList<>();
         try {
@@ -113,5 +125,26 @@ public class ProfesorController {
             System.err.println("Error al eliminar profesor: " + e.getMessage());
             return false;
         }
+    }
+
+    // Additional methods for UI compatibility
+    public List<Profesor> obtenerTodos() {
+        return obtenerProfesores();
+    }
+
+    public static List<Profesor> buscar(String termino) {
+        return buscarProfesores(termino);
+    }
+
+    public static boolean agregar(Profesor profesor) {
+        return crearProfesor(profesor);
+    }
+
+    public static boolean actualizar(Profesor profesor) {
+        return actualizarProfesor(profesor);
+    }
+
+    public static boolean eliminar(ObjectId id) {
+        return eliminarProfesor(id);
     }
 }

@@ -47,14 +47,16 @@ public class Alumno {
                 .append("apellidos", apellidos)
                 .append("email", email)
                 .append("telefono", telefono)
-                .append("fechaNacimiento", fechaNacimiento)
+                .append("fechaNacimiento", fechaNacimiento != null ? 
+                    java.util.Date.from(fechaNacimiento.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()) : null)
                 .append("direccion", direccion)
                 .append("nombreTutor", nombreTutor)
                 .append("telefonoTutor", telefonoTutor)
                 .append("emailTutor", emailTutor)
                 .append("gruposIds", gruposIds)
                 .append("activo", activo)
-                .append("fechaIngreso", fechaIngreso)
+                .append("fechaIngreso", fechaIngreso != null ? 
+                    java.util.Date.from(fechaIngreso.atZone(java.time.ZoneId.systemDefault()).toInstant()) : null)
                 .append("foto", foto);
     }
 
@@ -66,14 +68,30 @@ public class Alumno {
         alumno.setApellidos(doc.getString("apellidos"));
         alumno.setEmail(doc.getString("email"));
         alumno.setTelefono(doc.getString("telefono"));
-        alumno.setFechaNacimiento(doc.get("fechaNacimiento", LocalDate.class));
+        
+        // Convertir fechaNacimiento de Date a LocalDate
+        java.util.Date fechaNacimientoDate = doc.getDate("fechaNacimiento");
+        if (fechaNacimientoDate != null) {
+            alumno.setFechaNacimiento(fechaNacimientoDate.toInstant()
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDate());
+        }
+        
         alumno.setDireccion(doc.getString("direccion"));
         alumno.setNombreTutor(doc.getString("nombreTutor"));
         alumno.setTelefonoTutor(doc.getString("telefonoTutor"));
         alumno.setEmailTutor(doc.getString("emailTutor"));
         alumno.setGruposIds(doc.getList("gruposIds", ObjectId.class));
         alumno.setActivo(doc.getBoolean("activo", true));
-        alumno.setFechaIngreso(doc.get("fechaIngreso", LocalDateTime.class));
+        
+        // Convertir fechaIngreso de Date a LocalDateTime
+        java.util.Date fechaIngresoDate = doc.getDate("fechaIngreso");
+        if (fechaIngresoDate != null) {
+            alumno.setFechaIngreso(fechaIngresoDate.toInstant()
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDateTime());
+        }
+        
         alumno.setFoto(doc.getString("foto"));
         return alumno;
     }
@@ -125,4 +143,7 @@ public class Alumno {
 
     public String getFoto() { return foto; }
     public void setFoto(String foto) { this.foto = foto; }
+
+    // Additional methods for UI compatibility
+    public String getNumeroControl() { return matricula; } // Alias for matricula
 }

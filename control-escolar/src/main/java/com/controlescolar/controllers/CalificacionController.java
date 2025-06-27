@@ -86,37 +86,131 @@ public class CalificacionController {
             List<Calificacion> calificaciones = obtenerCalificacionesPorAlumnoYMateria(alumnoId, materiaId);
             if (calificaciones.isEmpty()) return 0.0;
 
-            double sumaFinal = 0.0;
-            int countParciales = 0, countExamenes = 0, countTareas = 0;
-            double sumaParciales = 0.0, sumaExamenes = 0.0, sumaTareas = 0.0;
+            double sumaCalificacionesPonderadas = 0.0;
+            double sumaPonderaciones = 0.0;
 
             for (Calificacion cal : calificaciones) {
-                switch (cal.getTipo()) {
-                    case PARCIAL:
-                        sumaParciales += cal.getCalificacion();
-                        countParciales++;
-                        break;
-                    case EXAMEN_FINAL:
-                        sumaExamenes += cal.getCalificacion();
-                        countExamenes++;
-                        break;
-                    case TAREA:
-                        sumaTareas += cal.getCalificacion();
-                        countTareas++;
-                        break;
-                }
+                double ponderacion = cal.getPonderacion() > 0 ? cal.getPonderacion() : cal.getTipo().getPesoDefault();
+                sumaCalificacionesPonderadas += cal.getCalificacion() * (ponderacion / 100.0);
+                sumaPonderaciones += ponderacion / 100.0;
             }
 
-            // Pesos: Parciales 40%, Examen Final 40%, Tareas 20%
-            if (countParciales > 0) sumaFinal += (sumaParciales / countParciales) * 0.4;
-            if (countExamenes > 0) sumaFinal += (sumaExamenes / countExamenes) * 0.4;
-            if (countTareas > 0) sumaFinal += (sumaTareas / countTareas) * 0.2;
-
-            return Math.round(sumaFinal * 100.0) / 100.0;
+            if (sumaPonderaciones == 0) return 0.0;
+            
+            double promedio = sumaCalificacionesPonderadas / sumaPonderaciones;
+            return Math.round(promedio * 100.0) / 100.0;
         } catch (Exception e) {
             System.err.println("Error al calcular promedio: " + e.getMessage());
             return 0.0;
         }
+    }
+
+    public static double calcularPromedioGeneralAlumno(ObjectId alumnoId) {
+        try {
+            List<Calificacion> todasCalificaciones = obtenerCalificacionesPorAlumno(alumnoId);
+            if (todasCalificaciones.isEmpty()) return 0.0;
+
+            // Agrupar por materia y calcular promedio por materia
+            java.util.Map<ObjectId, List<Calificacion>> calificacionesPorMateria = new java.util.HashMap<>();
+            for (Calificacion cal : todasCalificaciones) {
+                calificacionesPorMateria.computeIfAbsent(cal.getMateriaId(), k -> new ArrayList<>()).add(cal);
+            }
+
+            double sumaPromedios = 0.0;
+            int contadorMaterias = 0;
+
+            for (java.util.Map.Entry<ObjectId, List<Calificacion>> entry : calificacionesPorMateria.entrySet()) {
+                double promedioMateria = calcularPromedioAlumno(alumnoId, entry.getKey());
+                if (promedioMateria > 0) {
+                    sumaPromedios += promedioMateria;
+                    contadorMaterias++;
+                }
+            }
+
+            return contadorMaterias > 0 ? Math.round((sumaPromedios / contadorMaterias) * 100.0) / 100.0 : 0.0;
+        } catch (Exception e) {
+            System.err.println("Error al calcular promedio general: " + e.getMessage());
+            return 0.0;
+        }
+    }
+
+    public static List<Calificacion> obtenerCalificacionesPorPeriodo(String periodo) {
+        List<Calificacion> calificaciones = new ArrayList<>();
+        try {
+            collection.find(Filters.eq("periodo", periodo))
+                    .sort(Sorts.descending("fechaRegistro"))
+                    .forEach(doc -> calificaciones.add(Calificacion.fromDocument(doc)));
+        } catch (Exception e) {
+            System.err.println("Error al obtener calificaciones por período: " + e.getMessage());
+        }
+        return calificaciones;
+    }
+
+    public static List<Calificacion> obtenerCalificacionesPorTipo(TipoCalificacion tipo) {
+        List<Calificacion> calificaciones = new ArrayList<>();
+        try {
+            collection.find(Filters.eq("tipo", tipo.toString()))
+                    .sort(Sorts.descending("fechaRegistro"))
+                    .forEach(doc -> calificaciones.add(Calificacion.fromDocument(doc)));
+        } catch (Exception e) {
+            System.err.println("Error al obtener calificaciones por tipo: " + e.getMessage());
+        }
+        return calificaciones;
+    }
+
+    public static boolean validarCalificacion(double calificacion, TipoCalificacion tipo) {
+        // Validar rango (0-10)
+        if (calificacion < 0 || calificacion > 10) {
+            return false;
+        }
+        
+        // Validar calificación mínima según tipo si requiere aprobación
+        if (tipo.isRequiereAprobacion() && calificacion < tipo.getCalificacionMinima()) {
+            System.out.println("Advertencia: Calificación por debajo del mínimo requerido para " + tipo.getNombre());
+        }
+        
+        return true;
+    }
+
+    public static String determinarEstadoAprobacion(double promedio) {
+        if (promedio >= 8.0) return "Excelente";
+        else if (promedio >= 7.0) return "Bueno";
+        else if (promedio >= 6.0) return "Aprobado";
+        else return "Reprobado";
+    }
+
+    public static List<java.util.Map<String, Object>> obtenerHistorialAcademico(ObjectId alumnoId) {
+        List<java.util.Map<String, Object>> historial = new ArrayList<>();
+        try {
+            List<Calificacion> calificaciones = obtenerCalificacionesPorAlumno(alumnoId);
+            
+            // Agrupar por materia y período
+            java.util.Map<String, java.util.Map<ObjectId, List<Calificacion>>> historialPorPeriodo = new java.util.HashMap<>();
+            
+            for (Calificacion cal : calificaciones) {
+                String periodo = cal.getPeriodo() != null ? cal.getPeriodo() : "Sin período";
+                historialPorPeriodo.computeIfAbsent(periodo, k -> new java.util.HashMap<>())
+                        .computeIfAbsent(cal.getMateriaId(), k -> new ArrayList<>()).add(cal);
+            }
+
+            for (java.util.Map.Entry<String, java.util.Map<ObjectId, List<Calificacion>>> periodoEntry : historialPorPeriodo.entrySet()) {
+                for (java.util.Map.Entry<ObjectId, List<Calificacion>> materiaEntry : periodoEntry.getValue().entrySet()) {
+                    java.util.Map<String, Object> registro = new java.util.HashMap<>();
+                    registro.put("periodo", periodoEntry.getKey());
+                    registro.put("materiaId", materiaEntry.getKey());
+                    
+                    double promedio = calcularPromedioAlumno(alumnoId, materiaEntry.getKey());
+                    registro.put("promedio", promedio);
+                    registro.put("estado", determinarEstadoAprobacion(promedio));
+                    registro.put("calificaciones", materiaEntry.getValue());
+                    
+                    historial.add(registro);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error al obtener historial académico: " + e.getMessage());
+        }
+        return historial;
     }
 
     public static boolean eliminarCalificacion(ObjectId id) {
@@ -127,5 +221,16 @@ public class CalificacionController {
             System.err.println("Error al eliminar calificación: " + e.getMessage());
             return false;
         }
+    }
+
+    // Additional methods for UI compatibility
+    public static List<Calificacion> obtenerTodas() {
+        List<Calificacion> calificaciones = new ArrayList<>();
+        try {
+            collection.find().sort(Sorts.descending("fechaRegistro")).forEach(doc -> calificaciones.add(Calificacion.fromDocument(doc)));
+        } catch (Exception e) {
+            System.err.println("Error al obtener todas las calificaciones: " + e.getMessage());
+        }
+        return calificaciones;
     }
 }

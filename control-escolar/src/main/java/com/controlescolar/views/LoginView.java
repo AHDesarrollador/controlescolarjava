@@ -126,7 +126,7 @@ public class LoginView extends Application {
         }
 
         // Deshabilitar botón durante la validación
-        loginButton.setDisabled(true);
+        loginButton.setDisable(true);
         loginButton.setText("Validando...");
 
         try {
@@ -145,16 +145,23 @@ public class LoginView extends Application {
         } catch (Exception e) {
             mostrarMensaje("Error de conexión: " + e.getMessage(), "error");
         } finally {
-            loginButton.setDisabled(false);
+            loginButton.setDisable(false);
             loginButton.setText("Ingresar");
         }
     }
 
     private void abrirDashboard(Usuario usuario) {
         try {
-            DashboardView dashboard = new DashboardView(usuario);
-            Stage dashboardStage = new Stage();
-            dashboard.start(dashboardStage);
+            // Verificar si es padre de familia para redirigir a su vista específica
+            if (usuario.getRol() == Rol.PADRE_FAMILIA) {
+                PadresDashboardView padresDashboard = new PadresDashboardView(usuario);
+                Stage dashboardStage = new Stage();
+                padresDashboard.start(dashboardStage);
+            } else {
+                DashboardView dashboard = new DashboardView(usuario);
+                Stage dashboardStage = new Stage();
+                dashboard.start(dashboardStage);
+            }
 
             // Cerrar ventana de login
             primaryStage.close();

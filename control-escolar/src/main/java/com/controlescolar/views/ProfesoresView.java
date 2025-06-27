@@ -9,6 +9,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -23,7 +24,6 @@ import java.util.Optional;
 
 public class ProfesoresView extends Application {
 
-    private ProfesorController profesorController;
     private Usuario usuarioActual;
     private Stage primaryStage;
 
@@ -41,7 +41,6 @@ public class ProfesoresView extends Application {
 
     public ProfesoresView(Usuario usuario) {
         this.usuarioActual = usuario;
-        this.profesorController = new ProfesorController();
         this.listaProfesores = FXCollections.observableArrayList();
     }
 
@@ -145,10 +144,20 @@ public class ProfesoresView extends Application {
     private TableView<Profesor> createTablaProfesores() {
         TableView<Profesor> tabla = new TableView<>();
         tabla.setItems(listaProfesores);
+        
+        // Estilos para mejorar la visibilidad del texto
+        tabla.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
 
         // Columnas
         TableColumn<Profesor, String> colCedula = new TableColumn<>("Cédula");
-        colCedula.setCellValueFactory(new PropertyValueFactory<>("cedula"));
+        colCedula.setCellValueFactory(new PropertyValueFactory<>("numeroEmpleado"));
         colCedula.setPrefWidth(120);
 
         TableColumn<Profesor, String> colNombre = new TableColumn<>("Nombre");
@@ -156,7 +165,7 @@ public class ProfesoresView extends Application {
         colNombre.setPrefWidth(150);
 
         TableColumn<Profesor, String> colApellido = new TableColumn<>("Apellido");
-        colApellido.setCellValueFactory(new PropertyValueFactory<>("apellido"));
+        colApellido.setCellValueFactory(new PropertyValueFactory<>("apellidos"));
         colApellido.setPrefWidth(150);
 
         TableColumn<Profesor, String> colEmail = new TableColumn<>("Email");
@@ -168,7 +177,7 @@ public class ProfesoresView extends Application {
         colTelefono.setPrefWidth(120);
 
         TableColumn<Profesor, String> colEspecialidades = new TableColumn<>("Especialidades");
-        colEspecialidades.setCellValueFactory(new PropertyValueFactory<>("especialidades"));
+        colEspecialidades.setCellValueFactory(new PropertyValueFactory<>("especialidad"));
         colEspecialidades.setPrefWidth(180);
 
         TableColumn<Profesor, LocalDate> colFechaIngreso = new TableColumn<>("Fecha Ingreso");
@@ -176,7 +185,10 @@ public class ProfesoresView extends Application {
         colFechaIngreso.setPrefWidth(120);
 
         TableColumn<Profesor, String> colEstatus = new TableColumn<>("Estatus");
-        colEstatus.setCellValueFactory(new PropertyValueFactory<>("estatus"));
+        colEstatus.setCellValueFactory(cellData -> {
+            boolean activo = cellData.getValue().isActivo();
+            return new javafx.beans.property.SimpleStringProperty(activo ? "Activo" : "Inactivo");
+        });
         colEstatus.setPrefWidth(100);
 
         // Colorear celda de estatus
@@ -223,7 +235,7 @@ public class ProfesoresView extends Application {
 
     private void cargarProfesores() {
         try {
-            List<Profesor> profesores = profesorController.obtenerTodos();
+            List<Profesor> profesores = ProfesorController.obtenerProfesores();
             listaProfesores.clear();
             listaProfesores.addAll(profesores);
         } catch (Exception e) {
@@ -238,7 +250,7 @@ public class ProfesoresView extends Application {
         }
 
         try {
-            List<Profesor> profesoresFiltrados = profesorController.buscar(filtro);
+            List<Profesor> profesoresFiltrados = ProfesorController.buscarProfesores(filtro);
             listaProfesores.clear();
             listaProfesores.addAll(profesoresFiltrados);
         } catch (Exception e) {
@@ -297,11 +309,11 @@ public class ProfesoresView extends Application {
             try {
                 if (profesor == null) {
                     // Agregar nuevo
-                    profesorController.agregar(profesorGuardado);
+                    ProfesorController.crearProfesor(profesorGuardado);
                     mostrarInfo("Profesor agregado exitosamente");
                 } else {
                     // Actualizar existente
-                    profesorController.actualizar(profesorGuardado);
+                    ProfesorController.actualizarProfesor(profesorGuardado);
                     mostrarInfo("Profesor actualizado exitosamente");
                 }
                 cargarProfesores();
@@ -378,15 +390,30 @@ public class ProfesoresView extends Application {
     }
 
     private void llenarFormulario(Profesor profesor) {
-        cedulaField.setText(profesor.getCedula());
-        nombreField.setText(profesor.getNombre());
-        apellidoField.setText(profesor.getApellido());
-        emailField.setText(profesor.getEmail());
-        telefonoField.setText(profesor.getTelefono());
-        direccionArea.setText(profesor.getDireccion());
-        especialidadesArea.setText(profesor.getEspecialidades());
-        fechaIngresoDatePicker.setValue(profesor.getFechaIngreso());
-        estatusCombo.setValue(profesor.getEstatus());
+        // Map database fields to UI fields with null checks
+        if (cedulaField != null) {
+            String cedula = profesor.getNumeroEmpleado() != null ? profesor.getNumeroEmpleado() : 
+                           (profesor.getCedula() != null ? profesor.getCedula() : "");
+            cedulaField.setText(cedula);
+        }
+        if (nombreField != null) nombreField.setText(profesor.getNombre() != null ? profesor.getNombre() : "");
+        if (apellidoField != null) {
+            String apellidos = profesor.getApellidos() != null ? profesor.getApellidos() : 
+                              (profesor.getApellido() != null ? profesor.getApellido() : "");
+            apellidoField.setText(apellidos);
+        }
+        if (emailField != null) emailField.setText(profesor.getEmail() != null ? profesor.getEmail() : "");
+        if (telefonoField != null) telefonoField.setText(profesor.getTelefono() != null ? profesor.getTelefono() : "");
+        if (direccionArea != null) direccionArea.setText(profesor.getDireccion() != null ? profesor.getDireccion() : "");
+        if (especialidadesArea != null) {
+            String especialidad = profesor.getEspecialidad() != null ? profesor.getEspecialidad() : 
+                                 (profesor.getEspecialidades() != null ? profesor.getEspecialidades() : "");
+            especialidadesArea.setText(especialidad);
+        }
+        if (fechaIngresoDatePicker != null && profesor.getFechaIngreso() != null) {
+            fechaIngresoDatePicker.setValue(profesor.getFechaIngreso().toLocalDate());
+        }
+        if (estatusCombo != null) estatusCombo.setValue(profesor.isActivo() ? "Activo" : "Inactivo");
     }
 
     private void agregarValidacionFormulario(Node guardarButton) {
@@ -412,15 +439,25 @@ public class ProfesoresView extends Application {
     private Profesor crearProfesorDesdeFormulario(Profesor profesorExistente) {
         Profesor profesor = profesorExistente != null ? profesorExistente : new Profesor();
 
-        profesor.setCedula(cedulaField.getText().trim());
-        profesor.setNombre(nombreField.getText().trim());
-        profesor.setApellido(apellidoField.getText().trim());
-        profesor.setEmail(emailField.getText().trim());
-        profesor.setTelefono(telefonoField.getText().trim());
-        profesor.setDireccion(direccionArea.getText().trim());
-        profesor.setEspecialidades(especialidadesArea.getText().trim());
-        profesor.setFechaIngreso(fechaIngresoDatePicker.getValue());
-        profesor.setEstatus(estatusCombo.getValue());
+        // Map UI fields to database fields with null checks
+        profesor.setNumeroEmpleado(cedulaField != null && cedulaField.getText() != null ? cedulaField.getText().trim() : "");
+        profesor.setNombre(nombreField != null && nombreField.getText() != null ? nombreField.getText().trim() : "");
+        profesor.setApellidos(apellidoField != null && apellidoField.getText() != null ? apellidoField.getText().trim() : "");
+        profesor.setEmail(emailField != null && emailField.getText() != null ? emailField.getText().trim() : "");
+        profesor.setTelefono(telefonoField != null && telefonoField.getText() != null ? telefonoField.getText().trim() : "");
+        profesor.setEspecialidad(especialidadesArea != null && especialidadesArea.getText() != null ? especialidadesArea.getText().trim() : "");
+        
+        if (fechaIngresoDatePicker != null && fechaIngresoDatePicker.getValue() != null) {
+            profesor.setFechaIngreso(fechaIngresoDatePicker.getValue().atStartOfDay());
+        }
+        
+        profesor.setActivo("Activo".equals(estatusCombo != null ? estatusCombo.getValue() : "Activo"));
+        
+        // Also set UI compatibility fields
+        profesor.setCedula(cedulaField != null && cedulaField.getText() != null ? cedulaField.getText().trim() : "");
+        profesor.setDireccion(direccionArea != null && direccionArea.getText() != null ? direccionArea.getText().trim() : "");
+        profesor.setEspecialidades(especialidadesArea != null && especialidadesArea.getText() != null ? especialidadesArea.getText().trim() : "");
+        profesor.setEstatus(estatusCombo != null ? estatusCombo.getValue() : "Activo");
 
         return profesor;
     }
@@ -437,7 +474,7 @@ public class ProfesoresView extends Application {
         Optional<ButtonType> resultado = confirmacion.showAndWait();
         if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
             try {
-                profesorController.eliminar(seleccionado.getId());
+                ProfesorController.eliminarProfesor(seleccionado.getId());
                 mostrarInfo("Profesor eliminado exitosamente");
                 cargarProfesores();
             } catch (Exception e) {

@@ -18,6 +18,12 @@ public class Profesor {
     private boolean activo;
     private LocalDateTime fechaIngreso;
     private String foto;
+    
+    // Additional fields for UI compatibility
+    private String cedula;
+    private String direccion;
+    private String especialidades;
+    private String estatus;
 
     // Constructores
     public Profesor() {
@@ -45,7 +51,8 @@ public class Profesor {
                 .append("especialidad", especialidad)
                 .append("materiasIds", materiasIds)
                 .append("activo", activo)
-                .append("fechaIngreso", fechaIngreso)
+                .append("fechaIngreso", fechaIngreso != null ? 
+                    java.util.Date.from(fechaIngreso.atZone(java.time.ZoneId.systemDefault()).toInstant()) : null)
                 .append("foto", foto);
     }
 
@@ -60,7 +67,15 @@ public class Profesor {
         profesor.setEspecialidad(doc.getString("especialidad"));
         profesor.setMateriasIds(doc.getList("materiasIds", ObjectId.class));
         profesor.setActivo(doc.getBoolean("activo", true));
-        profesor.setFechaIngreso(doc.get("fechaIngreso", LocalDateTime.class));
+        
+        // Convertir fechaIngreso de Date a LocalDateTime
+        java.util.Date fechaIngresoDate = doc.getDate("fechaIngreso");
+        if (fechaIngresoDate != null) {
+            profesor.setFechaIngreso(fechaIngresoDate.toInstant()
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDateTime());
+        }
+        
         profesor.setFoto(doc.getString("foto"));
         return profesor;
     }
@@ -77,6 +92,8 @@ public class Profesor {
 
     public String getApellidos() { return apellidos; }
     public void setApellidos(String apellidos) { this.apellidos = apellidos; }
+    
+    public String getApellido() { return apellidos; } // Alias for UI compatibility
 
     public String getNombreCompleto() { return nombre + " " + apellidos; }
 
@@ -100,4 +117,19 @@ public class Profesor {
 
     public String getFoto() { return foto; }
     public void setFoto(String foto) { this.foto = foto; }
+
+    // Additional getters and setters for UI compatibility
+    public String getCedula() { return cedula; }
+    public void setCedula(String cedula) { this.cedula = cedula; }
+
+    public String getDireccion() { return direccion; }
+    public void setDireccion(String direccion) { this.direccion = direccion; }
+
+    public String getEspecialidades() { return especialidades; }
+    public void setEspecialidades(String especialidades) { this.especialidades = especialidades; }
+
+    public String getEstatus() { return estatus; }
+    public void setEstatus(String estatus) { this.estatus = estatus; }
+
+    public void setApellido(String apellido) { this.apellidos = apellido; } // Alias for UI compatibility
 }

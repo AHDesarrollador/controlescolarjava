@@ -11,6 +11,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -19,13 +20,12 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import java.util.List;
 import java.util.Optional;
 
 public class MateriasView extends Application {
 
-    private MateriaController materiaController;
-    private ProfesorController profesorController;
     private Usuario usuarioActual;
     private Stage primaryStage;
 
@@ -43,8 +43,6 @@ public class MateriasView extends Application {
 
     public MateriasView(Usuario usuario) {
         this.usuarioActual = usuario;
-        this.materiaController = new MateriaController();
-        this.profesorController = new ProfesorController();
         this.listaMaterias = FXCollections.observableArrayList();
     }
 
@@ -148,6 +146,16 @@ public class MateriasView extends Application {
     private TableView<Materia> createTablaMaterias() {
         TableView<Materia> tabla = new TableView<>();
         tabla.setItems(listaMaterias);
+        
+        // Estilos para mejorar la visibilidad del texto
+        tabla.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
 
         // Columnas
         TableColumn<Materia, String> colCodigo = new TableColumn<>("Código");
@@ -233,7 +241,7 @@ public class MateriasView extends Application {
 
     private void cargarMaterias() {
         try {
-            List<Materia> materias = materiaController.obtenerTodas();
+            List<Materia> materias = MateriaController.obtenerMaterias();
             listaMaterias.clear();
             listaMaterias.addAll(materias);
         } catch (Exception e) {
@@ -248,7 +256,7 @@ public class MateriasView extends Application {
         }
 
         try {
-            List<Materia> materiasFiltradas = materiaController.buscar(filtro);
+            List<Materia> materiasFiltradas = MateriaController.buscarMaterias(filtro);
             listaMaterias.clear();
             listaMaterias.addAll(materiasFiltradas);
         } catch (Exception e) {
@@ -307,11 +315,11 @@ public class MateriasView extends Application {
             try {
                 if (materia == null) {
                     // Agregar nueva
-                    materiaController.agregar(materiaGuardada);
+                    MateriaController.crearMateria(materiaGuardada);
                     mostrarInfo("Materia agregada exitosamente");
                 } else {
                     // Actualizar existente
-                    materiaController.actualizar(materiaGuardada);
+                    MateriaController.actualizarMateria(materiaGuardada);
                     mostrarInfo("Materia actualizada exitosamente");
                 }
                 cargarMaterias();
@@ -389,7 +397,7 @@ public class MateriasView extends Application {
 
     private void cargarProfesores() {
         try {
-            List<Profesor> profesores = profesorController.obtenerTodos();
+            List<Profesor> profesores = ProfesorController.obtenerProfesores();
             profesorCombo.getItems().clear();
             profesorCombo.getItems().add(null); // Opción "Sin asignar"
             profesorCombo.getItems().addAll(profesores);
@@ -413,15 +421,15 @@ public class MateriasView extends Application {
     }
 
     private void llenarFormulario(Materia materia) {
-        codigoField.setText(materia.getCodigo());
-        nombreField.setText(materia.getNombre());
-        descripcionArea.setText(materia.getDescripcion());
-        creditosField.setText(String.valueOf(materia.getCreditos()));
-        horasSemanalesField.setText(String.valueOf(materia.getHorasSemanales()));
-        semestreCombo.setValue(materia.getSemestre());
-        prerrequisitosArea.setText(materia.getPrerequisitos());
-        profesorCombo.setValue(materia.getProfesor());
-        estatusCombo.setValue(materia.getEstatus());
+        if (codigoField != null) codigoField.setText(materia.getCodigo() != null ? materia.getCodigo() : "");
+        if (nombreField != null) nombreField.setText(materia.getNombre() != null ? materia.getNombre() : "");
+        if (descripcionArea != null) descripcionArea.setText(materia.getDescripcion() != null ? materia.getDescripcion() : "");
+        if (creditosField != null) creditosField.setText(String.valueOf(materia.getCreditos()));
+        if (horasSemanalesField != null) horasSemanalesField.setText(String.valueOf(materia.getHorasSemanales()));
+        if (semestreCombo != null) semestreCombo.setValue(materia.getSemestre() != null ? materia.getSemestre() : "");
+        if (prerrequisitosArea != null) prerrequisitosArea.setText(materia.getPrerequisitos() != null ? materia.getPrerequisitos() : "");
+        if (profesorCombo != null) profesorCombo.setValue(materia.getProfesor());
+        if (estatusCombo != null) estatusCombo.setValue(materia.getEstatus() != null ? materia.getEstatus() : "Activo");
     }
 
     private void agregarValidacionFormulario(Node guardarButton) {
@@ -447,15 +455,31 @@ public class MateriasView extends Application {
     private Materia crearMateriaDesdeFormulario(Materia materiaExistente) {
         Materia materia = materiaExistente != null ? materiaExistente : new Materia();
 
-        materia.setCodigo(codigoField.getText().trim());
-        materia.setNombre(nombreField.getText().trim());
-        materia.setDescripcion(descripcionArea.getText().trim());
-        materia.setCreditos(Integer.parseInt(creditosField.getText().trim()));
-        materia.setHorasSemanales(Integer.parseInt(horasSemanalesField.getText().trim()));
-        materia.setSemestre(semestreCombo.getValue());
-        materia.setPrerequisitos(prerrequisitosArea.getText().trim());
-        materia.setProfesor(profesorCombo.getValue());
-        materia.setEstatus(estatusCombo.getValue());
+        materia.setCodigo(codigoField != null && codigoField.getText() != null ? codigoField.getText().trim() : "");
+        materia.setNombre(nombreField != null && nombreField.getText() != null ? nombreField.getText().trim() : "");
+        materia.setDescripcion(descripcionArea != null && descripcionArea.getText() != null ? descripcionArea.getText().trim() : "");
+        
+        // Manejar campos numéricos con validación
+        if (creditosField != null && creditosField.getText() != null && !creditosField.getText().trim().isEmpty()) {
+            try {
+                materia.setCreditos(Integer.parseInt(creditosField.getText().trim()));
+            } catch (NumberFormatException e) {
+                materia.setCreditos(0);
+            }
+        }
+        
+        if (horasSemanalesField != null && horasSemanalesField.getText() != null && !horasSemanalesField.getText().trim().isEmpty()) {
+            try {
+                materia.setHorasSemanales(Integer.parseInt(horasSemanalesField.getText().trim()));
+            } catch (NumberFormatException e) {
+                materia.setHorasSemanales(0);
+            }
+        }
+        
+        materia.setSemestre(semestreCombo != null ? semestreCombo.getValue() : "");
+        materia.setPrerequisitos(prerrequisitosArea != null && prerrequisitosArea.getText() != null ? prerrequisitosArea.getText().trim() : "");
+        materia.setProfesor(profesorCombo != null ? profesorCombo.getValue() : null);
+        materia.setEstatus(estatusCombo != null ? estatusCombo.getValue() : "Activo");
 
         return materia;
     }
@@ -472,7 +496,7 @@ public class MateriasView extends Application {
         Optional<ButtonType> resultado = confirmacion.showAndWait();
         if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
             try {
-                materiaController.eliminar(seleccionada.getId());
+                MateriaController.eliminarMateria(seleccionada.getId());
                 mostrarInfo("Materia eliminada exitosamente");
                 cargarMaterias();
             } catch (Exception e) {

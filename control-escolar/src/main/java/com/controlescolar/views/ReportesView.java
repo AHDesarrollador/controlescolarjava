@@ -10,6 +10,7 @@ import com.controlescolar.controllers.MateriaController;
 import com.controlescolar.models.*;
 import com.controlescolar.utils.PDFGenerator;
 import com.controlescolar.utils.ExcelExporter;
+import org.bson.types.ObjectId;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -199,22 +200,24 @@ public class ReportesView extends Application {
 
         // Columnas
         TableColumn<Calificacion, String> alumnoCol = new TableColumn<>("Alumno");
-        alumnoCol.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        data.getValue().getAlumno().getNombre() + " " +
-                                data.getValue().getAlumno().getApellidos()
-                )
-        );
+        alumnoCol.setCellValueFactory(data -> {
+            Calificacion cal = data.getValue();
+            String nombreAlumno = obtenerNombreAlumno(cal.getAlumnoId());
+            return new javafx.beans.property.SimpleStringProperty(nombreAlumno);
+        });
 
         TableColumn<Calificacion, String> materiaCol = new TableColumn<>("Materia");
-        materiaCol.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getMateria().getNombre())
-        );
+        materiaCol.setCellValueFactory(data -> {
+            Calificacion cal = data.getValue();
+            String nombreMateria = obtenerNombreMateria(cal.getMateriaId());
+            return new javafx.beans.property.SimpleStringProperty(nombreMateria);
+        });
 
         TableColumn<Calificacion, String> grupoCol = new TableColumn<>("Grupo");
-        grupoCol.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getGrupo().getNombre())
-        );
+        grupoCol.setCellValueFactory(data -> {
+            // For now, return a placeholder since groups aren't directly linked to grades
+            return new javafx.beans.property.SimpleStringProperty("N/A");
+        });
 
         TableColumn<Calificacion, Double> calificacionCol = new TableColumn<>("Calificación");
         calificacionCol.setCellValueFactory(data ->
@@ -336,17 +339,18 @@ public class ReportesView extends Application {
         TableView<Asistencia> tabla = new TableView<>();
 
         TableColumn<Asistencia, String> alumnoCol = new TableColumn<>("Alumno");
-        alumnoCol.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        data.getValue().getAlumno().getNombre() + " " +
-                                data.getValue().getAlumno().getApellidos()
-                )
-        );
+        alumnoCol.setCellValueFactory(data -> {
+            Asistencia asistencia = data.getValue();
+            String nombreAlumno = obtenerNombreAlumno(asistencia.getAlumnoId());
+            return new javafx.beans.property.SimpleStringProperty(nombreAlumno);
+        });
 
         TableColumn<Asistencia, String> materiaCol = new TableColumn<>("Materia");
-        materiaCol.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getMateria().getNombre())
-        );
+        materiaCol.setCellValueFactory(data -> {
+            Asistencia asistencia = data.getValue();
+            String nombreMateria = obtenerNombreMateria(asistencia.getMateriaId());
+            return new javafx.beans.property.SimpleStringProperty(nombreMateria);
+        });
 
         TableColumn<Asistencia, String> fechaCol = new TableColumn<>("Fecha");
         fechaCol.setCellValueFactory(data ->
@@ -480,12 +484,11 @@ public class ReportesView extends Application {
         TableView<Pago> tabla = new TableView<>();
 
         TableColumn<Pago, String> alumnoCol = new TableColumn<>("Alumno");
-        alumnoCol.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleStringProperty(
-                        data.getValue().getAlumno().getNombre() + " " +
-                                data.getValue().getAlumno().getApellidos()
-                )
-        );
+        alumnoCol.setCellValueFactory(data -> {
+            Pago pago = data.getValue();
+            String nombreAlumno = obtenerNombreAlumno(pago.getAlumnoId());
+            return new javafx.beans.property.SimpleStringProperty(nombreAlumno);
+        });
 
         TableColumn<Pago, Double> montoCol = new TableColumn<>("Monto");
         montoCol.setCellValueFactory(data ->
@@ -595,7 +598,7 @@ public class ReportesView extends Application {
         List<Calificacion> calificaciones = calificacionController.obtenerTodas();
         Map<String, Double> promediosPorMateria = calificaciones.stream()
                 .collect(Collectors.groupingBy(
-                        c -> c.getMateria().getNombre(),
+                        c -> obtenerNombreMateria(c.getMateriaId()),
                         Collectors.averagingDouble(Calificacion::getCalificacion)
                 ));
 
@@ -694,6 +697,32 @@ public class ReportesView extends Application {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
+    }
+
+    private String obtenerNombreMateria(ObjectId materiaId) {
+        if (materiaId == null) return "Sin asignar";
+        try {
+            Materia materia = MateriaController.obtenerMateriaPorId(materiaId);
+            if (materia != null) {
+                return materia.getNombre();
+            }
+        } catch (Exception e) {
+            System.err.println("Error al obtener materia: " + e.getMessage());
+        }
+        return "ID: " + materiaId.toString();
+    }
+
+    private String obtenerNombreAlumno(ObjectId alumnoId) {
+        if (alumnoId == null) return "Sin asignar";
+        try {
+            Alumno alumno = AlumnoController.obtenerAlumnoPorId(alumnoId);
+            if (alumno != null) {
+                return alumno.getNombre() + " " + alumno.getApellidos();
+            }
+        } catch (Exception e) {
+            System.err.println("Error al obtener alumno: " + e.getMessage());
+        }
+        return "ID: " + alumnoId.toString();
     }
 
     public static void main(String[] args) {

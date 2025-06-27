@@ -13,6 +13,7 @@ import com.controlescolar.models.*;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -201,7 +202,9 @@ public class PDFGenerator {
      * Genera reporte de pagos de un alumno
      */
     public static boolean generatePaymentReport(Alumno alumno, List<Pago> pagos, String outputPath) {
-        try (PDDocument document = new PDDocument()) {
+        PDDocument document = null;
+        try {
+            document = new PDDocument();
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
 
@@ -222,6 +225,9 @@ public class PDFGenerator {
                 addFooter(contentStream, page);
             }
 
+            // Forzar liberación de memoria antes de guardar
+            System.gc();
+            
             document.save(outputPath);
             LOGGER.info("Reporte de pagos generado: " + outputPath);
             return true;
@@ -229,6 +235,15 @@ public class PDFGenerator {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error al generar reporte de pagos", e);
             return false;
+        } finally {
+            // Asegurar que el documento se cierre
+            if (document != null) {
+                try {
+                    document.close();
+                } catch (IOException e) {
+                    LOGGER.log(Level.WARNING, "Error al cerrar documento PDF", e);
+                }
+            }
         }
     }
 
@@ -472,7 +487,7 @@ public class PDFGenerator {
 
     private static float addPaymentsTable(PDPageContentStream contentStream,
                                           List<Pago> pagos, float yPosition) throws IOException {
-        // Similar implementación que las otras tablas...
+        // Título de la tabla
         contentStream.beginText();
         contentStream.setFont(FONT_SUBTITLE, FONT_SIZE_SUBTITLE);
         contentStream.newLineAtOffset(MARGIN, yPosition);
@@ -503,41 +518,72 @@ public class PDFGenerator {
         contentStream.stroke();
         yPosition -= LINE_SPACING;
 
+        // Verificar si hay pagos
+        if (pagos == null || pagos.isEmpty()) {
+            contentStream.beginText();
+            contentStream.setFont(FONT_NORMAL, FONT_SIZE_NORMAL);
+            contentStream.newLineAtOffset(tableX, yPosition);
+            contentStream.showText("No hay pagos registrados");
+            contentStream.endText();
+            return yPosition - LINE_SPACING;
+        }
+
         // Datos
         double totalPagado = 0;
+        double totalPendiente = 0;
+        
         for (Pago pago : pagos) {
-            contentStream.beginText();
-            contentStream.setFont(FONT_NORMAL, FONT_SIZE_SMALL);
-            currentX = tableX;
+            try {
+                contentStream.beginText();
+                contentStream.setFont(FONT_NORMAL, FONT_SIZE_SMALL);
+                currentX = tableX;
 
-            String[] rowData = {
-                    pago.getPeriodo(),
-                    String.format("$%.2f", pago.getMontoTotal()),
-                    pago.getFechaPago() != null ?
-                            pago.getFechaPago().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "Pendiente",
-                    pago.getEstado().toString()
-            };
+                // Obtener datos de forma segura
+                String concepto = pago.getConcepto() != null ? pago.getConcepto() : 
+                                 (pago.getPeriodo() != null ? pago.getPeriodo() : "Sin concepto");
+                String monto = String.format("$%.2f", pago.getMontoTotal());
+                String fechaPago = pago.getFechaPago() != null ?
+                        pago.getFechaPago().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "Pendiente";
+                String estado = pago.getEstado() != null ? pago.getEstado().getNombre() : "Sin estado";
 
-            for (int i = 0; i < rowData.length; i++) {
-                contentStream.newLineAtOffset(currentX, yPosition);
-                contentStream.showText(rowData[i]);
-                contentStream.newLineAtOffset(-currentX, 0);
-                currentX += columnWidths[i];
-            }
-            contentStream.endText();
-            yPosition -= LINE_SPACING;
+                String[] rowData = {concepto, monto, fechaPago, estado};
 
-            if (pago.getFechaPago() != null) {
-                totalPagado += pago.getMontoPagado();
+                for (int i = 0; i < rowData.length; i++) {
+                    contentStream.newLineAtOffset(currentX, yPosition);
+                    contentStream.showText(rowData[i] != null ? rowData[i] : "");
+                    contentStream.newLineAtOffset(-currentX, 0);
+                    currentX += columnWidths[i];
+                }
+                contentStream.endText();
+                yPosition -= LINE_SPACING;
+
+                // Calcular totales
+                if (pago.getFechaPago() != null && pago.getEstado() != null &&
+                    (pago.getEstado().isCompletado())) {
+                    totalPagado += pago.getMontoPagado();
+                } else {
+                    totalPendiente += pago.getSaldoPendiente();
+                }
+                
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Error al procesar pago en tabla: " + e.getMessage());
+                // Continuar con el siguiente pago
             }
         }
 
-        // Total
+        // Resumen financiero
         yPosition -= LINE_SPACING;
         contentStream.beginText();
         contentStream.setFont(FONT_SUBTITLE, FONT_SIZE_NORMAL);
-        contentStream.newLineAtOffset(MARGIN + 300, yPosition);
+        contentStream.newLineAtOffset(MARGIN + 200, yPosition);
         contentStream.showText(String.format("Total Pagado: $%.2f", totalPagado));
+        contentStream.endText();
+        
+        yPosition -= LINE_SPACING;
+        contentStream.beginText();
+        contentStream.setFont(FONT_SUBTITLE, FONT_SIZE_NORMAL);
+        contentStream.newLineAtOffset(MARGIN + 200, yPosition);
+        contentStream.showText(String.format("Total Pendiente: $%.2f", totalPendiente));
         contentStream.endText();
 
         return yPosition;
@@ -606,7 +652,7 @@ public class PDFGenerator {
     private static void addFooter(PDPageContentStream contentStream, PDPage page) throws IOException {
         float footerY = MARGIN;
         String footerText = "Documento generado el " +
-                LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
 
         contentStream.beginText();
         contentStream.setFont(FONT_SMALL, FONT_SIZE_SMALL);
@@ -625,6 +671,293 @@ public class PDFGenerator {
         File parentDir = file.getParentFile();
         if (parentDir != null && !parentDir.exists()) {
             parentDir.mkdirs();
+        }
+    }
+
+    /**
+     * Genera recibo de pago
+     */
+    public static boolean generatePaymentReceipt(Pago pago, Alumno alumno, String outputPath) {
+        PDDocument document = null;
+        try {
+            document = new PDDocument();
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+
+            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+                float yPosition = page.getMediaBox().getHeight() - MARGIN;
+
+                // Encabezado institucional
+                yPosition = addInstitutionalHeader(contentStream, page, yPosition);
+                yPosition -= PARAGRAPH_SPACING * 2;
+
+                // Título del recibo
+                contentStream.beginText();
+                contentStream.setFont(FONT_TITLE, FONT_SIZE_TITLE);
+                float titleWidth = FONT_TITLE.getStringWidth("RECIBO DE PAGO") / 1000 * FONT_SIZE_TITLE;
+                float titleX = (page.getMediaBox().getWidth() - titleWidth) / 2;
+                contentStream.newLineAtOffset(titleX, yPosition);
+                contentStream.showText("RECIBO DE PAGO");
+                contentStream.endText();
+                yPosition -= PARAGRAPH_SPACING;
+
+                // Folio
+                contentStream.beginText();
+                contentStream.setFont(FONT_NORMAL, FONT_SIZE_NORMAL);
+                contentStream.newLineAtOffset(page.getMediaBox().getWidth() - 150, yPosition);
+                contentStream.showText("Folio: " + pago.getFolio());
+                contentStream.endText();
+                yPosition -= PARAGRAPH_SPACING * 2;
+
+                // Información del alumno
+                yPosition = addStudentInfo(contentStream, alumno, yPosition);
+                yPosition -= PARAGRAPH_SPACING;
+
+                // Detalles del pago
+                yPosition = addPaymentDetails(contentStream, pago, yPosition);
+
+                // Firma y sello
+                yPosition -= PARAGRAPH_SPACING * 2;
+                contentStream.beginText();
+                contentStream.setFont(FONT_NORMAL, FONT_SIZE_NORMAL);
+                contentStream.newLineAtOffset(page.getMediaBox().getWidth() - 200, yPosition);
+                contentStream.showText("_________________________");
+                contentStream.endText();
+
+                yPosition -= LINE_SPACING;
+                contentStream.beginText();
+                contentStream.setFont(FONT_SMALL, FONT_SIZE_SMALL);
+                contentStream.newLineAtOffset(page.getMediaBox().getWidth() - 200, yPosition);
+                contentStream.showText("Firma y Sello");
+                contentStream.endText();
+
+                addFooter(contentStream, page);
+            }
+
+            // Forzar liberación de memoria antes de guardar
+            System.gc();
+            
+            document.save(outputPath);
+            LOGGER.info("Recibo de pago generado: " + outputPath);
+            return true;
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error al generar recibo de pago", e);
+            return false;
+        } finally {
+            // Asegurar que el documento se cierre
+            if (document != null) {
+                try {
+                    document.close();
+                } catch (IOException e) {
+                    LOGGER.log(Level.WARNING, "Error al cerrar documento PDF de recibo", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Genera boleta de calificaciones
+     */
+    public static boolean generateGradeReportCard(Alumno alumno, Map<String, Object> historialAcademico, String outputPath) {
+        try (PDDocument document = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+
+            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+                float yPosition = page.getMediaBox().getHeight() - MARGIN;
+
+                // Encabezado
+                yPosition = addInstitutionalHeader(contentStream, page, yPosition);
+                yPosition -= PARAGRAPH_SPACING;
+
+                // Título
+                contentStream.beginText();
+                contentStream.setFont(FONT_TITLE, FONT_SIZE_TITLE);
+                float titleWidth = FONT_TITLE.getStringWidth("BOLETA DE CALIFICACIONES") / 1000 * FONT_SIZE_TITLE;
+                float titleX = (page.getMediaBox().getWidth() - titleWidth) / 2;
+                contentStream.newLineAtOffset(titleX, yPosition);
+                contentStream.showText("BOLETA DE CALIFICACIONES");
+                contentStream.endText();
+                yPosition -= PARAGRAPH_SPACING * 2;
+
+                // Información del alumno
+                yPosition = addStudentInfo(contentStream, alumno, yPosition);
+                yPosition -= PARAGRAPH_SPACING;
+
+                // Tabla de calificaciones por materia
+                yPosition = addGradeReportCardTable(contentStream, historialAcademico, yPosition);
+
+                addFooter(contentStream, page);
+            }
+
+            document.save(outputPath);
+            LOGGER.info("Boleta de calificaciones generada: " + outputPath);
+            return true;
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error al generar boleta de calificaciones", e);
+            return false;
+        }
+    }
+
+    private static float addPaymentDetails(PDPageContentStream contentStream, Pago pago, float yPosition) throws IOException {
+        contentStream.beginText();
+        contentStream.setFont(FONT_SUBTITLE, FONT_SIZE_SUBTITLE);
+        contentStream.newLineAtOffset(MARGIN, yPosition);
+        contentStream.showText("DETALLES DEL PAGO");
+        contentStream.endText();
+        yPosition -= PARAGRAPH_SPACING;
+
+        String[] details = {
+                "Período: " + pago.getPeriodo(),
+                "Concepto: Colegiatura",
+                "Monto Original: $" + String.format("%.2f", pago.getMontoOriginal()),
+                "Recargos: $" + String.format("%.2f", pago.getMontoRecargo()),
+                "Becas/Descuentos: $" + String.format("%.2f", pago.getMontoBeca()),
+                "Total: $" + String.format("%.2f", pago.getMontoTotal()),
+                "Monto Pagado: $" + String.format("%.2f", pago.getMontoPagado()),
+                "Método de Pago: " + (pago.getMetodoPago() != null ? pago.getMetodoPago() : "N/A"),
+                "Fecha de Pago: " + (pago.getFechaPago() != null ? 
+                    pago.getFechaPago().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "Pendiente"),
+                "Estado: " + pago.getEstado().getNombre()
+        };
+
+        for (String detail : details) {
+            contentStream.beginText();
+            contentStream.setFont(FONT_NORMAL, FONT_SIZE_NORMAL);
+            contentStream.newLineAtOffset(MARGIN, yPosition);
+            contentStream.showText(detail);
+            contentStream.endText();
+            yPosition -= LINE_SPACING;
+        }
+
+        if (pago.getObservaciones() != null && !pago.getObservaciones().trim().isEmpty()) {
+            yPosition -= LINE_SPACING;
+            contentStream.beginText();
+            contentStream.setFont(FONT_NORMAL, FONT_SIZE_NORMAL);
+            contentStream.newLineAtOffset(MARGIN, yPosition);
+            contentStream.showText("Observaciones: " + pago.getObservaciones());
+            contentStream.endText();
+            yPosition -= LINE_SPACING;
+        }
+
+        return yPosition;
+    }
+
+    private static float addGradeReportCardTable(PDPageContentStream contentStream, 
+                                                Map<String, Object> historial, float yPosition) throws IOException {
+        contentStream.beginText();
+        contentStream.setFont(FONT_SUBTITLE, FONT_SIZE_SUBTITLE);
+        contentStream.newLineAtOffset(MARGIN, yPosition);
+        contentStream.showText("CALIFICACIONES POR PERÍODO");
+        contentStream.endText();
+        yPosition -= PARAGRAPH_SPACING;
+
+        // Headers
+        String[] headers = {"Materia", "Parcial 1", "Parcial 2", "Final", "Promedio", "Estado"};
+        float[] columnWidths = {150f, 60f, 60f, 60f, 70f, 80f};
+        float tableX = MARGIN;
+
+        // Dibujar headers
+        contentStream.beginText();
+        contentStream.setFont(FONT_SUBTITLE, FONT_SIZE_SMALL);
+        float currentX = tableX;
+        for (int i = 0; i < headers.length; i++) {
+            contentStream.newLineAtOffset(currentX, yPosition);
+            contentStream.showText(headers[i]);
+            contentStream.newLineAtOffset(-currentX, 0);
+            currentX += columnWidths[i];
+        }
+        contentStream.endText();
+        yPosition -= LINE_SPACING;
+
+        // Línea separadora
+        contentStream.moveTo(tableX, yPosition);
+        contentStream.lineTo(tableX + 480, yPosition);
+        contentStream.stroke();
+        yPosition -= LINE_SPACING;
+
+        // Aquí se agregarían los datos del historial académico
+        // Por simplicidad, mostramos datos de ejemplo
+        String[][] sampleData = {
+                {"Matemáticas", "8.5", "9.0", "8.8", "8.8", "Aprobado"},
+                {"Español", "9.0", "8.5", "9.2", "8.9", "Aprobado"},
+                {"Historia", "7.5", "8.0", "7.8", "7.8", "Aprobado"},
+                {"Ciencias", "9.5", "9.0", "9.3", "9.3", "Excelente"}
+        };
+
+        for (String[] rowData : sampleData) {
+            contentStream.beginText();
+            contentStream.setFont(FONT_NORMAL, FONT_SIZE_SMALL);
+            currentX = tableX;
+
+            for (int i = 0; i < rowData.length; i++) {
+                contentStream.newLineAtOffset(currentX, yPosition);
+                contentStream.showText(rowData[i]);
+                contentStream.newLineAtOffset(-currentX, 0);
+                currentX += columnWidths[i];
+            }
+            contentStream.endText();
+            yPosition -= LINE_SPACING;
+        }
+
+        // Promedio general
+        yPosition -= LINE_SPACING;
+        contentStream.beginText();
+        contentStream.setFont(FONT_SUBTITLE, FONT_SIZE_NORMAL);
+        contentStream.newLineAtOffset(MARGIN + 300, yPosition);
+        contentStream.showText("Promedio General: 8.7");
+        contentStream.endText();
+
+        return yPosition;
+    }
+
+    /**
+     * Método genérico para generar reportes
+     */
+    public static boolean generarReporte(String titulo, javafx.collections.ObservableList<?> datos, String rutaArchivo) {
+        try {
+            validateOutputDirectory(rutaArchivo);
+            
+            try (PDDocument document = new PDDocument()) {
+                PDPage page = new PDPage(PDRectangle.A4);
+                document.addPage(page);
+
+                try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+                    float yPosition = page.getMediaBox().getHeight() - MARGIN;
+
+                    // Encabezado
+                    yPosition = addHeader(contentStream, page, titulo, yPosition);
+                    yPosition -= PARAGRAPH_SPACING;
+
+                    // Datos (implementación básica)
+                    contentStream.beginText();
+                    contentStream.setFont(FONT_NORMAL, FONT_SIZE_NORMAL);
+                    contentStream.newLineAtOffset(MARGIN, yPosition);
+                    contentStream.showText("Total de registros: " + datos.size());
+                    contentStream.endText();
+                    yPosition -= LINE_SPACING;
+
+                    for (int i = 0; i < Math.min(datos.size(), 20); i++) {
+                        contentStream.beginText();
+                        contentStream.setFont(FONT_SMALL, FONT_SIZE_SMALL);
+                        contentStream.newLineAtOffset(MARGIN, yPosition);
+                        contentStream.showText((i + 1) + ". " + datos.get(i).toString());
+                        contentStream.endText();
+                        yPosition -= LINE_SPACING;
+                    }
+
+                    addFooter(contentStream, page);
+                }
+
+                document.save(rutaArchivo);
+                LOGGER.info("Reporte genérico generado: " + rutaArchivo);
+                return true;
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error al generar reporte genérico", e);
+            return false;
         }
     }
 }

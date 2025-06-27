@@ -8,6 +8,7 @@ import com.controlescolar.models.Calificacion;
 import com.controlescolar.models.Alumno;
 import com.controlescolar.models.Materia;
 import com.controlescolar.models.Usuario;
+import org.bson.types.ObjectId;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -220,9 +221,7 @@ public class CalificacionesView extends Application {
         TableColumn<Calificacion, String> colEstudianteNombre = new TableColumn<>("Estudiante");
         colEstudianteNombre.setCellValueFactory(cellData -> {
             Calificacion calificacion = cellData.getValue();
-            // El modelo usa ObjectIds, necesita resolver la referencia
-            String nombreCompleto = "ID: " + (calificacion.getAlumnoId() != null ? 
-                    calificacion.getAlumnoId().toString() : "Sin asignar");
+            String nombreCompleto = obtenerNombreEstudiante(calificacion.getAlumnoId());
             return new javafx.beans.property.SimpleStringProperty(nombreCompleto);
         });
         colEstudianteNombre.setPrefWidth(200);
@@ -230,10 +229,8 @@ public class CalificacionesView extends Application {
         TableColumn<Calificacion, String> colMateria = new TableColumn<>("Materia");
         colMateria.setCellValueFactory(cellData -> {
             Calificacion calificacion = cellData.getValue();
-            // El modelo usa ObjectIds, no objetos directos
-            String materia = calificacion.getMateriaId() != null ? 
-                    calificacion.getMateriaId().toString() : "Sin asignar";
-            return new javafx.beans.property.SimpleStringProperty(materia);
+            String nombreMateria = obtenerNombreMateria(calificacion.getMateriaId());
+            return new javafx.beans.property.SimpleStringProperty(nombreMateria);
         });
         colMateria.setPrefWidth(150);
 
@@ -304,11 +301,10 @@ public class CalificacionesView extends Application {
 
     private void cargarMateriasParaFiltro() {
         try {
-            // MateriaController no tiene obtenerTodas(), comentado por ahora
-            // List<Materia> materias = MateriaController.obtenerMaterias();
+            List<Materia> materias = MateriaController.obtenerMaterias();
             filtroMateriaCombo.getItems().clear();
             filtroMateriaCombo.getItems().add(null); // Opción "Todas"
-            // filtroMateriaCombo.getItems().addAll(materias);
+            filtroMateriaCombo.getItems().addAll(materias);
 
             filtroMateriaCombo.setConverter(new StringConverter<Materia>() {
                 @Override
@@ -328,8 +324,7 @@ public class CalificacionesView extends Application {
 
     private void cargarCalificaciones() {
         try {
-            // CalificacionController no tiene obtenerTodas(), usar método disponible
-            List<Calificacion> calificaciones = new java.util.ArrayList<>(); // Temporal
+            List<Calificacion> calificaciones = CalificacionController.obtenerTodas();
             listaCalificaciones.clear();
             listaCalificaciones.addAll(calificaciones);
             actualizarEstadisticas();
@@ -544,10 +539,9 @@ public class CalificacionesView extends Application {
 
     private void cargarMaterias() {
         try {
-            // MateriaController no tiene obtenerTodas(), comentado por ahora
-            // List<Materia> materias = MateriaController.obtenerMaterias();
+            List<Materia> materias = MateriaController.obtenerMaterias();
             materiaCombo.getItems().clear();
-            // materiaCombo.getItems().addAll(materias);
+            materiaCombo.getItems().addAll(materias);
 
             materiaCombo.setConverter(new StringConverter<Materia>() {
                 @Override
@@ -688,6 +682,32 @@ public class CalificacionesView extends Application {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
+    }
+
+    private String obtenerNombreEstudiante(ObjectId alumnoId) {
+        if (alumnoId == null) return "Sin asignar";
+        try {
+            Alumno alumno = AlumnoController.obtenerAlumnoPorId(alumnoId);
+            if (alumno != null) {
+                return alumno.getNombre() + " " + alumno.getApellidos();
+            }
+        } catch (Exception e) {
+            System.err.println("Error al obtener estudiante: " + e.getMessage());
+        }
+        return "ID: " + alumnoId.toString();
+    }
+
+    private String obtenerNombreMateria(ObjectId materiaId) {
+        if (materiaId == null) return "Sin asignar";
+        try {
+            Materia materia = MateriaController.obtenerMateriaPorId(materiaId);
+            if (materia != null) {
+                return materia.getNombre();
+            }
+        } catch (Exception e) {
+            System.err.println("Error al obtener materia: " + e.getMessage());
+        }
+        return "ID: " + materiaId.toString();
     }
 
     public static void main(String[] args) {

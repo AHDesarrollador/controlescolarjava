@@ -2,9 +2,11 @@
 package com.controlescolar.views;
 
 import com.controlescolar.controllers.PagoController;
+import com.controlescolar.controllers.AlumnoController;
 import com.controlescolar.models.Pago;
 import com.controlescolar.models.Alumno;
 import com.controlescolar.enums.EstadoPago;
+import com.controlescolar.enums.TipoPago;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -292,22 +294,250 @@ public class PagosView {
     }
 
     private void mostrarDialogoNuevoPago() {
-        // Ventana emergente para nuevo pago (simplificado)
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.initOwner(stage);
-
-        VBox layout = new VBox(10);
-        layout.setPadding(new Insets(20));
-
-        Label lblInfo = new Label("Funcionalidad de 'Nuevo Pago' pendiente de implementación");
-        Button btnCerrar = new Button("Cerrar");
-        btnCerrar.setOnAction(e -> dialog.close());
-
-        layout.getChildren().addAll(lblInfo, btnCerrar);
-        dialog.setScene(new Scene(layout, 300, 150));
-        dialog.setTitle("Nuevo Pago");
-        dialog.show();
+        dialog.setTitle("Crear Nuevo Pago");
+        
+        BorderPane root = new BorderPane();
+        root.setPadding(new Insets(20));
+        
+        // Header
+        Label titulo = new Label("💰 Crear Nuevo Pago");
+        titulo.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        
+        VBox headerBox = new VBox(10);
+        headerBox.getChildren().add(titulo);
+        headerBox.setPadding(new Insets(0, 0, 20, 0));
+        root.setTop(headerBox);
+        
+        // Formulario
+        GridPane form = new GridPane();
+        form.setHgap(15);
+        form.setVgap(15);
+        form.setAlignment(Pos.TOP_LEFT);
+        
+        // Selección de alumno
+        Label lblAlumno = new Label("Alumno:");
+        lblAlumno.setStyle("-fx-font-weight: bold;");
+        ComboBox<Alumno> comboAlumno = new ComboBox<>();
+        comboAlumno.setPrefWidth(300);
+        comboAlumno.setConverter(new javafx.util.StringConverter<Alumno>() {
+            @Override
+            public String toString(Alumno alumno) {
+                return alumno == null ? "Seleccionar alumno..." : 
+                       alumno.getMatricula() + " - " + alumno.getNombre() + " " + alumno.getApellidos();
+            }
+            @Override
+            public Alumno fromString(String string) {
+                return null;
+            }
+        });
+        
+        // Cargar alumnos
+        try {
+            List<Alumno> alumnos = AlumnoController.obtenerAlumnos();
+            comboAlumno.getItems().addAll(alumnos);
+        } catch (Exception e) {
+            mostrarAlerta("Error al cargar alumnos: " + e.getMessage());
+        }
+        
+        // Tipo de pago
+        Label lblTipo = new Label("Tipo de Pago:");
+        lblTipo.setStyle("-fx-font-weight: bold;");
+        ComboBox<TipoPago> comboTipo = new ComboBox<>();
+        comboTipo.getItems().addAll(TipoPago.values());
+        comboTipo.setValue(TipoPago.COLEGIATURA);
+        comboTipo.setPrefWidth(200);
+        comboTipo.setConverter(new javafx.util.StringConverter<TipoPago>() {
+            @Override
+            public String toString(TipoPago tipo) {
+                return tipo == null ? "" : tipo.getNombre();
+            }
+            @Override
+            public TipoPago fromString(String string) {
+                return null;
+            }
+        });
+        
+        // Concepto
+        Label lblConcepto = new Label("Concepto:");
+        lblConcepto.setStyle("-fx-font-weight: bold;");
+        TextField txtConcepto = new TextField();
+        txtConcepto.setPromptText("Ej: Colegiatura Enero 2025");
+        txtConcepto.setPrefWidth(300);
+        
+        // Auto-completar concepto basado en tipo de pago
+        comboTipo.setOnAction(e -> {
+            TipoPago tipo = comboTipo.getValue();
+            if (tipo != null) {
+                String mes = getMesActual();
+                String anio = String.valueOf(LocalDate.now().getYear());
+                switch (tipo) {
+                    case COLEGIATURA:
+                        txtConcepto.setText("Colegiatura " + mes + " " + anio);
+                        break;
+                    case INSCRIPCION:
+                        txtConcepto.setText("Inscripción " + anio);
+                        break;
+                    case REINSCRIPCION:
+                        txtConcepto.setText("Reinscripción " + anio);
+                        break;
+                    default:
+                        txtConcepto.setText(tipo.getNombre() + " " + mes + " " + anio);
+                        break;
+                }
+            }
+        });
+        
+        // Monto original
+        Label lblMonto = new Label("Monto Original:");
+        lblMonto.setStyle("-fx-font-weight: bold;");
+        TextField txtMonto = new TextField();
+        txtMonto.setPromptText("0.00");
+        txtMonto.setPrefWidth(150);
+        
+        // Fecha de vencimiento
+        Label lblVencimiento = new Label("Fecha de Vencimiento:");
+        lblVencimiento.setStyle("-fx-font-weight: bold;");
+        DatePicker dateVencimiento = new DatePicker();
+        dateVencimiento.setValue(LocalDate.now().plusDays(30)); // 30 días por defecto
+        dateVencimiento.setPrefWidth(200);
+        
+        // Periodo
+        Label lblPeriodo = new Label("Periodo:");
+        lblPeriodo.setStyle("-fx-font-weight: bold;");
+        TextField txtPeriodo = new TextField();
+        txtPeriodo.setText(getMesActual() + " " + LocalDate.now().getYear());
+        txtPeriodo.setPrefWidth(200);
+        
+        // Observaciones
+        Label lblObservaciones = new Label("Observaciones:");
+        lblObservaciones.setStyle("-fx-font-weight: bold;");
+        TextArea txtObservaciones = new TextArea();
+        txtObservaciones.setPromptText("Observaciones adicionales...");
+        txtObservaciones.setPrefRowCount(3);
+        txtObservaciones.setPrefWidth(300);
+        
+        // Estado (solo lectura)
+        Label lblEstado = new Label("Estado Inicial:");
+        lblEstado.setStyle("-fx-font-weight: bold;");
+        Label lblEstadoValue = new Label("PENDIENTE");
+        lblEstadoValue.setStyle("-fx-text-fill: orange; -fx-font-weight: bold;");
+        
+        // Agregar campos al formulario
+        form.add(lblAlumno, 0, 0);
+        form.add(comboAlumno, 1, 0, 2, 1);
+        
+        form.add(lblTipo, 0, 1);
+        form.add(comboTipo, 1, 1);
+        
+        form.add(lblConcepto, 0, 2);
+        form.add(txtConcepto, 1, 2, 2, 1);
+        
+        form.add(lblMonto, 0, 3);
+        form.add(txtMonto, 1, 3);
+        
+        form.add(lblVencimiento, 0, 4);
+        form.add(dateVencimiento, 1, 4);
+        
+        form.add(lblPeriodo, 0, 5);
+        form.add(txtPeriodo, 1, 5);
+        
+        form.add(lblEstado, 0, 6);
+        form.add(lblEstadoValue, 1, 6);
+        
+        form.add(lblObservaciones, 0, 7);
+        form.add(txtObservaciones, 1, 7, 2, 1);
+        
+        root.setCenter(form);
+        
+        // Botones
+        HBox buttonBox = new HBox(15);
+        buttonBox.setAlignment(Pos.CENTER_RIGHT);
+        buttonBox.setPadding(new Insets(20, 0, 0, 0));
+        
+        Button btnCancelar = new Button("❌ Cancelar");
+        btnCancelar.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-padding: 10px 20px;");
+        btnCancelar.setOnAction(e -> dialog.close());
+        
+        Button btnGuardar = new Button("💾 Crear Pago");
+        btnGuardar.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 10px 20px;");
+        btnGuardar.setOnAction(e -> {
+            try {
+                // Validaciones
+                if (comboAlumno.getValue() == null) {
+                    mostrarAlerta("Debe seleccionar un alumno.");
+                    return;
+                }
+                
+                if (txtConcepto.getText().trim().isEmpty()) {
+                    mostrarAlerta("Debe ingresar un concepto.");
+                    return;
+                }
+                
+                double monto;
+                try {
+                    monto = Double.parseDouble(txtMonto.getText());
+                    if (monto <= 0) {
+                        mostrarAlerta("El monto debe ser mayor a 0.");
+                        return;
+                    }
+                } catch (NumberFormatException ex) {
+                    mostrarAlerta("El monto debe ser un número válido.");
+                    return;
+                }
+                
+                if (dateVencimiento.getValue() == null) {
+                    mostrarAlerta("Debe seleccionar una fecha de vencimiento.");
+                    return;
+                }
+                
+                // Crear el pago
+                Pago nuevoPago = new Pago();
+                nuevoPago.setAlumnoId(comboAlumno.getValue().getId());
+                nuevoPago.setTipo(comboTipo.getValue());
+                nuevoPago.setConcepto(txtConcepto.getText().trim());
+                nuevoPago.setMontoOriginal(monto);
+                nuevoPago.setMontoPagado(0.0);
+                nuevoPago.setMontoRecargo(0.0);
+                nuevoPago.setMontoBeca(0.0);
+                nuevoPago.setFechaVencimiento(dateVencimiento.getValue());
+                nuevoPago.setPeriodo(txtPeriodo.getText().trim());
+                nuevoPago.setEstado(EstadoPago.PENDIENTE);
+                nuevoPago.setObservaciones(txtObservaciones.getText().trim());
+                nuevoPago.setResponsableRegistro("Administrador");
+                
+                // Generar folio automático
+                String folio = "PAG" + System.currentTimeMillis();
+                nuevoPago.setFolio(folio);
+                
+                // Guardar en base de datos
+                if (PagoController.registrarPago(nuevoPago)) {
+                    mostrarAlerta("Pago creado exitosamente.\nFolio: " + folio);
+                    cargarPagos(); // Recargar la tabla
+                    dialog.close();
+                } else {
+                    mostrarAlerta("Error al crear el pago. Intente nuevamente.");
+                }
+                
+            } catch (Exception ex) {
+                mostrarAlerta("Error inesperado: " + ex.getMessage());
+            }
+        });
+        
+        buttonBox.getChildren().addAll(btnCancelar, btnGuardar);
+        root.setBottom(buttonBox);
+        
+        Scene scene = new Scene(root, 600, 600);
+        dialog.setScene(scene);
+        dialog.showAndWait();
+    }
+    
+    private String getMesActual() {
+        String[] meses = {"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+        return meses[LocalDate.now().getMonthValue() - 1];
     }
 
     private void registrarPago() {
@@ -324,12 +554,209 @@ public class PagosView {
 
     private void editarPago() {
         Pago seleccionado = tablaPagos.getSelectionModel().getSelectedItem();
-        if (seleccionado != null) {
-            // Aquí podrías abrir un diálogo editable con campos ya llenados
-            mostrarAlerta("Funcionalidad de 'Editar Pago' pendiente de implementación");
-        } else {
+        if (seleccionado == null) {
             mostrarAlerta("Selecciona un pago para editar.");
+            return;
         }
+        
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initOwner(stage);
+        dialog.setTitle("Editar Pago");
+        
+        BorderPane root = new BorderPane();
+        root.setPadding(new Insets(20));
+        
+        // Header
+        Label titulo = new Label("✏️ Editar Pago");
+        titulo.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        
+        VBox headerBox = new VBox(10);
+        headerBox.getChildren().add(titulo);
+        headerBox.setPadding(new Insets(0, 0, 20, 0));
+        root.setTop(headerBox);
+        
+        // Formulario
+        GridPane form = new GridPane();
+        form.setHgap(15);
+        form.setVgap(15);
+        form.setAlignment(Pos.TOP_LEFT);
+        
+        // Folio (solo lectura)
+        Label lblFolio = new Label("Folio:");
+        lblFolio.setStyle("-fx-font-weight: bold;");
+        TextField txtFolio = new TextField(seleccionado.getFolio());
+        txtFolio.setEditable(false);
+        txtFolio.setStyle("-fx-background-color: #f0f0f0;");
+        
+        // Concepto
+        Label lblConcepto = new Label("Concepto:");
+        lblConcepto.setStyle("-fx-font-weight: bold;");
+        TextField txtConcepto = new TextField(seleccionado.getConcepto());
+        txtConcepto.setPrefWidth(300);
+        
+        // Monto original
+        Label lblMontoOriginal = new Label("Monto Original:");
+        lblMontoOriginal.setStyle("-fx-font-weight: bold;");
+        TextField txtMontoOriginal = new TextField(String.valueOf(seleccionado.getMontoOriginal()));
+        txtMontoOriginal.setPrefWidth(150);
+        
+        // Monto pagado
+        Label lblMontoPagado = new Label("Monto Pagado:");
+        lblMontoPagado.setStyle("-fx-font-weight: bold;");
+        TextField txtMontoPagado = new TextField(String.valueOf(seleccionado.getMontoPagado()));
+        txtMontoPagado.setPrefWidth(150);
+        
+        // Monto recargo
+        Label lblMontoRecargo = new Label("Recargo:");
+        lblMontoRecargo.setStyle("-fx-font-weight: bold;");
+        TextField txtMontoRecargo = new TextField(String.valueOf(seleccionado.getMontoRecargo()));
+        txtMontoRecargo.setPrefWidth(150);
+        
+        // Monto beca
+        Label lblMontoBeca = new Label("Beca/Descuento:");
+        lblMontoBeca.setStyle("-fx-font-weight: bold;");
+        TextField txtMontoBeca = new TextField(String.valueOf(seleccionado.getMontoBeca()));
+        txtMontoBeca.setPrefWidth(150);
+        
+        // Fecha de vencimiento
+        Label lblVencimiento = new Label("Fecha de Vencimiento:");
+        lblVencimiento.setStyle("-fx-font-weight: bold;");
+        DatePicker dateVencimiento = new DatePicker(seleccionado.getFechaVencimiento());
+        dateVencimiento.setPrefWidth(200);
+        
+        // Fecha de pago
+        Label lblFechaPago = new Label("Fecha de Pago:");
+        lblFechaPago.setStyle("-fx-font-weight: bold;");
+        DatePicker datePago = new DatePicker(seleccionado.getFechaPago());
+        datePago.setPrefWidth(200);
+        
+        // Estado
+        Label lblEstado = new Label("Estado:");
+        lblEstado.setStyle("-fx-font-weight: bold;");
+        ComboBox<EstadoPago> comboEstado = new ComboBox<>();
+        comboEstado.getItems().addAll(EstadoPago.values());
+        comboEstado.setValue(seleccionado.getEstado());
+        comboEstado.setPrefWidth(150);
+        
+        // Método de pago
+        Label lblMetodoPago = new Label("Método de Pago:");
+        lblMetodoPago.setStyle("-fx-font-weight: bold;");
+        ComboBox<String> comboMetodo = new ComboBox<>();
+        comboMetodo.getItems().addAll("Efectivo", "Transferencia", "Tarjeta de Crédito", "Tarjeta de Débito", "Cheque");
+        comboMetodo.setValue(seleccionado.getMetodoPago());
+        comboMetodo.setPrefWidth(200);
+        
+        // Observaciones
+        Label lblObservaciones = new Label("Observaciones:");
+        lblObservaciones.setStyle("-fx-font-weight: bold;");
+        TextArea txtObservaciones = new TextArea(seleccionado.getObservaciones());
+        txtObservaciones.setPrefRowCount(3);
+        txtObservaciones.setPrefWidth(300);
+        
+        // Agregar campos al formulario
+        form.add(lblFolio, 0, 0);
+        form.add(txtFolio, 1, 0);
+        
+        form.add(lblConcepto, 0, 1);
+        form.add(txtConcepto, 1, 1, 2, 1);
+        
+        form.add(lblMontoOriginal, 0, 2);
+        form.add(txtMontoOriginal, 1, 2);
+        
+        form.add(lblMontoPagado, 0, 3);
+        form.add(txtMontoPagado, 1, 3);
+        
+        form.add(lblMontoRecargo, 0, 4);
+        form.add(txtMontoRecargo, 1, 4);
+        
+        form.add(lblMontoBeca, 0, 5);
+        form.add(txtMontoBeca, 1, 5);
+        
+        form.add(lblVencimiento, 0, 6);
+        form.add(dateVencimiento, 1, 6);
+        
+        form.add(lblFechaPago, 0, 7);
+        form.add(datePago, 1, 7);
+        
+        form.add(lblEstado, 0, 8);
+        form.add(comboEstado, 1, 8);
+        
+        form.add(lblMetodoPago, 0, 9);
+        form.add(comboMetodo, 1, 9);
+        
+        form.add(lblObservaciones, 0, 10);
+        form.add(txtObservaciones, 1, 10, 2, 1);
+        
+        root.setCenter(form);
+        
+        // Botones
+        HBox buttonBox = new HBox(15);
+        buttonBox.setAlignment(Pos.CENTER_RIGHT);
+        buttonBox.setPadding(new Insets(20, 0, 0, 0));
+        
+        Button btnCancelar = new Button("❌ Cancelar");
+        btnCancelar.setStyle("-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-padding: 10px 20px;");
+        btnCancelar.setOnAction(e -> dialog.close());
+        
+        Button btnGuardar = new Button("💾 Guardar Cambios");
+        btnGuardar.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 10px 20px;");
+        btnGuardar.setOnAction(e -> {
+            try {
+                // Validaciones
+                if (txtConcepto.getText().trim().isEmpty()) {
+                    mostrarAlerta("Debe ingresar un concepto.");
+                    return;
+                }
+                
+                double montoOriginal, montoPagado, montoRecargo, montoBeca;
+                try {
+                    montoOriginal = Double.parseDouble(txtMontoOriginal.getText());
+                    montoPagado = Double.parseDouble(txtMontoPagado.getText());
+                    montoRecargo = Double.parseDouble(txtMontoRecargo.getText());
+                    montoBeca = Double.parseDouble(txtMontoBeca.getText());
+                    
+                    if (montoOriginal < 0 || montoPagado < 0 || montoRecargo < 0 || montoBeca < 0) {
+                        mostrarAlerta("Los montos no pueden ser negativos.");
+                        return;
+                    }
+                } catch (NumberFormatException ex) {
+                    mostrarAlerta("Todos los montos deben ser números válidos.");
+                    return;
+                }
+                
+                // Actualizar el pago
+                seleccionado.setConcepto(txtConcepto.getText().trim());
+                seleccionado.setMontoOriginal(montoOriginal);
+                seleccionado.setMontoPagado(montoPagado);
+                seleccionado.setMontoRecargo(montoRecargo);
+                seleccionado.setMontoBeca(montoBeca);
+                seleccionado.setFechaVencimiento(dateVencimiento.getValue());
+                seleccionado.setFechaPago(datePago.getValue());
+                seleccionado.setEstado(comboEstado.getValue());
+                seleccionado.setMetodoPago(comboMetodo.getValue());
+                seleccionado.setObservaciones(txtObservaciones.getText().trim());
+                
+                // Guardar en base de datos
+                if (PagoController.actualizarPago(seleccionado)) {
+                    mostrarAlerta("Pago actualizado exitosamente.");
+                    cargarPagos(); // Recargar la tabla
+                    dialog.close();
+                } else {
+                    mostrarAlerta("Error al actualizar el pago. Intente nuevamente.");
+                }
+                
+            } catch (Exception ex) {
+                mostrarAlerta("Error inesperado: " + ex.getMessage());
+            }
+        });
+        
+        buttonBox.getChildren().addAll(btnCancelar, btnGuardar);
+        root.setBottom(buttonBox);
+        
+        Scene scene = new Scene(root, 650, 650);
+        dialog.setScene(scene);
+        dialog.showAndWait();
     }
 
     private void eliminarPago() {
@@ -376,7 +803,7 @@ public class PagosView {
             }
 
             return coincide;
-        }).toList();
+        }).collect(java.util.stream.Collectors.toList());
 
         listaPagos.setAll(pagosFiltrados);
         actualizarResumenFinanciero(pagosFiltrados);
@@ -412,5 +839,9 @@ public class PagosView {
         alerta.setHeaderText(null);
         alerta.setContentText(mensaje);
         alerta.showAndWait();
+    }
+
+    public void show() {
+        stage.show();
     }
 }

@@ -20,4 +20,18 @@ public enum EstadoAsistencia {
     public String toString() {
         return descripcion;
     }
+
+    /**
+     * Obtiene un estado por su descripción
+     * @param descripcion Descripción del estado a buscar
+     * @return EstadoAsistencia encontrado o null si no existe
+     */
+    public static EstadoAsistencia fromDescripcion(String descripcion) {
+        for (EstadoAsistencia estado : values()) {
+            if (estado.getDescripcion().equalsIgnoreCase(descripcion)) {
+                return estado;
+            }
+        }
+        return null;
+    }
 }

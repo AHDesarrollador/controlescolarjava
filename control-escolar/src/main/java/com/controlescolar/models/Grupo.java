@@ -4,6 +4,8 @@ package com.controlescolar.models;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
 public class Grupo {
@@ -44,7 +46,8 @@ public class Grupo {
                 .append("materiasIds", materiasIds)
                 .append("profesorTitularId", profesorTitularId)
                 .append("activo", activo)
-                .append("fechaCreacion", fechaCreacion);
+                .append("fechaCreacion", fechaCreacion != null ? 
+                    Date.from(fechaCreacion.atZone(ZoneId.systemDefault()).toInstant()) : null);
     }
 
     public static Grupo fromDocument(Document doc) {
@@ -58,7 +61,13 @@ public class Grupo {
         grupo.setMateriasIds(doc.getList("materiasIds", ObjectId.class));
         grupo.setProfesorTitularId(doc.getObjectId("profesorTitularId"));
         grupo.setActivo(doc.getBoolean("activo", true));
-        grupo.setFechaCreacion(doc.get("fechaCreacion", LocalDateTime.class));
+        // Convertir fechaCreacion de Date a LocalDateTime
+        java.util.Date fechaCreacionDate = doc.getDate("fechaCreacion");
+        if (fechaCreacionDate != null) {
+            grupo.setFechaCreacion(fechaCreacionDate.toInstant()
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDateTime());
+        }
         return grupo;
     }
 

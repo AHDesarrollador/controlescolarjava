@@ -35,9 +35,7 @@ public class MateriaController {
                     .append("nombre", materia.getNombre())
                     .append("descripcion", materia.getDescripcion())
                     .append("creditos", materia.getCreditos())
-                    .append("horasSemanales", materia.getHorasSemanales())
-                    .append("prerrequisitos", materia.getPrerrequisitos())
-                    .append("activo", materia.isActivo());
+                    .append("activa", materia.isActiva());
 
             collection.updateOne(
                     Filters.eq("_id", materia.getId()),
@@ -53,7 +51,7 @@ public class MateriaController {
     public static List<Materia> obtenerMaterias() {
         List<Materia> materias = new ArrayList<>();
         try {
-            collection.find(Filters.eq("activo", true))
+            collection.find(Filters.eq("activa", true))
                     .forEach(doc -> materias.add(Materia.fromDocument(doc)));
         } catch (Exception e) {
             System.err.println("Error al obtener materias: " + e.getMessage());
@@ -89,7 +87,7 @@ public class MateriaController {
                     new Document("nombre", regex),
                     new Document("codigo", regex),
                     new Document("descripcion", regex)
-            )).append("activo", true);
+            )).append("activa", true);
 
             collection.find(filter).forEach(doc -> materias.add(Materia.fromDocument(doc)));
         } catch (Exception e) {
@@ -102,12 +100,32 @@ public class MateriaController {
         try {
             collection.updateOne(
                     Filters.eq("_id", id),
-                    Updates.set("activo", false)
+                    Updates.set("activa", false)
             );
             return true;
         } catch (Exception e) {
             System.err.println("Error al eliminar materia: " + e.getMessage());
             return false;
         }
+    }
+
+    public List<Materia> obtenerTodas() {
+        return obtenerMaterias();
+    }
+
+    public static List<Materia> buscar(String termino) {
+        return buscarMaterias(termino);
+    }
+
+    public static boolean agregar(Materia materia) {
+        return crearMateria(materia);
+    }
+
+    public static boolean actualizar(Materia materia) {
+        return actualizarMateria(materia);
+    }
+
+    public static boolean eliminar(ObjectId id) {
+        return eliminarMateria(id);
     }
 }
