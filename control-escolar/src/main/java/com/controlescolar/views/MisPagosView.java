@@ -251,6 +251,16 @@ public class MisPagosView extends Application {
         tablaPagos = new TableView<>();
         tablaPagos.setItems(listaPagos);
         
+        // Estilos para mejorar la visibilidad del texto
+        tablaPagos.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
+        
         // Columnas
         TableColumn<Pago, String> colFecha = new TableColumn<>("Fecha");
         colFecha.setCellValueFactory(cellData -> {

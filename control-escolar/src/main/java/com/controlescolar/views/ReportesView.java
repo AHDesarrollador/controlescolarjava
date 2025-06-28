@@ -197,6 +197,16 @@ public class ReportesView extends Application {
 
     private TableView<Calificacion> createCalificacionesTable() {
         TableView<Calificacion> tabla = new TableView<>();
+        
+        // Estilos para mejorar la visibilidad del texto
+        tabla.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
 
         // Columnas
         TableColumn<Calificacion, String> alumnoCol = new TableColumn<>("Alumno");
@@ -337,6 +347,16 @@ public class ReportesView extends Application {
 
     private TableView<Asistencia> createAsistenciaTable() {
         TableView<Asistencia> tabla = new TableView<>();
+        
+        // Estilos para mejorar la visibilidad del texto
+        tabla.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
 
         TableColumn<Asistencia, String> alumnoCol = new TableColumn<>("Alumno");
         alumnoCol.setCellValueFactory(data -> {
@@ -482,6 +502,16 @@ public class ReportesView extends Application {
 
     private TableView<Pago> createPagosTable() {
         TableView<Pago> tabla = new TableView<>();
+        
+        // Estilos para mejorar la visibilidad del texto
+        tabla.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
 
         TableColumn<Pago, String> alumnoCol = new TableColumn<>("Alumno");
         alumnoCol.setCellValueFactory(data -> {

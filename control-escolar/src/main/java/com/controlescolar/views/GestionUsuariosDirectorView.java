@@ -151,6 +151,16 @@ public class GestionUsuariosDirectorView {
     private TableView<Usuario> createUsuariosTable() {
         TableView<Usuario> table = new TableView<>();
         table.setPrefHeight(500);
+        
+        // Estilos para mejorar la visibilidad del texto
+        table.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
 
         TableColumn<Usuario, String> nombreCol = new TableColumn<>("Nombre");
         nombreCol.setCellValueFactory(new PropertyValueFactory<>("nombre"));

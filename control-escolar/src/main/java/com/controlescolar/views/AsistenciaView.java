@@ -138,6 +138,16 @@ public class AsistenciaView {
         // Crear tabla
         tablaAsistencia = new TableView<>();
         tablaAsistencia.setItems(listaAsistencia);
+        
+        // Estilos para mejorar la visibilidad del texto
+        tablaAsistencia.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
 
         // Columnas de la tabla
         TableColumn<Asistencia, String> colAlumno = new TableColumn<>("Alumno");

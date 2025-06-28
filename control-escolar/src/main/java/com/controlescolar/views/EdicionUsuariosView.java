@@ -187,6 +187,16 @@ public class EdicionUsuariosView {
     private TableView<Usuario> createUsuariosTable() {
         TableView<Usuario> table = new TableView<>();
         table.setPrefHeight(600);
+        
+        // Estilos para mejorar la visibilidad del texto
+        table.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
 
         TableColumn<Usuario, String> nombreCol = new TableColumn<>("Nombre");
         nombreCol.setCellValueFactory(new PropertyValueFactory<>("nombre"));
@@ -223,6 +233,16 @@ public class EdicionUsuariosView {
     private TableView<Alumno> createAlumnosTable() {
         TableView<Alumno> table = new TableView<>();
         table.setPrefHeight(600);
+        
+        // Estilos para mejorar la visibilidad del texto
+        table.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
 
         TableColumn<Alumno, String> matriculaCol = new TableColumn<>("Matrícula");
         matriculaCol.setCellValueFactory(new PropertyValueFactory<>("matricula"));
@@ -263,6 +283,16 @@ public class EdicionUsuariosView {
     private TableView<Profesor> createProfesoresTable() {
         TableView<Profesor> table = new TableView<>();
         table.setPrefHeight(600);
+        
+        // Estilos para mejorar la visibilidad del texto
+        table.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
 
         TableColumn<Profesor, String> numeroEmpleadoCol = new TableColumn<>("No. Empleado");
         numeroEmpleadoCol.setCellValueFactory(new PropertyValueFactory<>("numeroEmpleado"));

@@ -140,6 +140,16 @@ public class PadresDashboardView extends Application {
     private TableView<CalificacionData> createCalificacionesTable() {
         TableView<CalificacionData> table = new TableView<>();
         
+        // Estilos para mejorar la visibilidad del texto
+        table.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
+        
         TableColumn<CalificacionData, String> materiaCol = new TableColumn<>("Materia");
         materiaCol.setCellValueFactory(new PropertyValueFactory<>("materia"));
         
@@ -159,6 +169,16 @@ public class PadresDashboardView extends Application {
     private TableView<AsistenciaData> createAsistenciaTable() {
         TableView<AsistenciaData> table = new TableView<>();
         
+        // Estilos para mejorar la visibilidad del texto
+        table.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
+        
         TableColumn<AsistenciaData, String> fechaCol = new TableColumn<>("Fecha");
         fechaCol.setCellValueFactory(new PropertyValueFactory<>("fecha"));
         
@@ -177,6 +197,16 @@ public class PadresDashboardView extends Application {
 
     private TableView<PagoData> createPagosTable() {
         TableView<PagoData> table = new TableView<>();
+        
+        // Estilos para mejorar la visibilidad del texto
+        table.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
         
         TableColumn<PagoData, String> conceptoCol = new TableColumn<>("Concepto");
         conceptoCol.setCellValueFactory(new PropertyValueFactory<>("concepto"));

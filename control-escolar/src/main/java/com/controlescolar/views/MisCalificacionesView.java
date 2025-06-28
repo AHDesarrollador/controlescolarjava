@@ -232,6 +232,16 @@ public class MisCalificacionesView extends Application {
         tablaCalificaciones = new TableView<>();
         tablaCalificaciones.setItems(listaCalificaciones);
         
+        // Estilos para mejorar la visibilidad del texto
+        tablaCalificaciones.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
+        
         // Columnas
         TableColumn<Calificacion, String> colMateria = new TableColumn<>("Materia");
         colMateria.setCellValueFactory(cellData -> {

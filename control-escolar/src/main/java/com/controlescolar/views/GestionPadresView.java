@@ -99,6 +99,16 @@ public class GestionPadresView {
     private TableView<VinculacionData> createVinculacionesTable() {
         TableView<VinculacionData> table = new TableView<>();
         table.setPrefHeight(500);
+        
+        // Estilos para mejorar la visibilidad del texto
+        table.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
 
         TableColumn<VinculacionData, String> padreCol = new TableColumn<>("Padre");
         padreCol.setCellValueFactory(new PropertyValueFactory<>("nombrePadre"));

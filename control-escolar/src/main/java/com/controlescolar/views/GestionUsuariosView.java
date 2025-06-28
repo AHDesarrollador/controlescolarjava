@@ -191,6 +191,16 @@ public class GestionUsuariosView extends Application {
         tablaUsuarios = new TableView<>();
         tablaUsuarios.setItems(listaUsuarios);
         
+        // Estilos para mejorar la visibilidad del texto
+        tablaUsuarios.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
+        
         // Columnas
         TableColumn<Usuario, String> colNombre = new TableColumn<>("Nombre");
         colNombre.setCellValueFactory(cellData -> {

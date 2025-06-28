@@ -53,6 +53,14 @@
     -fx-border-radius: 5;
     -fx-background-radius: 5;
     -fx-table-cell-border-color: #e1e1e1;
+    -fx-text-fill: black;
+    -fx-background-color: white;
+    -fx-control-inner-background: white;
+    -fx-control-inner-background-alt: #f4f4f4;
+}
+
+.table-view .table-cell {
+    -fx-text-fill: black;
 }
 
 .table-view .column-header-background {

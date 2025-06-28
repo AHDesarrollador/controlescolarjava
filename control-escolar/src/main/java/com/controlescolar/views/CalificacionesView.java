@@ -206,6 +206,16 @@ public class CalificacionesView extends Application {
     private TableView<Calificacion> createTablaCalificaciones() {
         TableView<Calificacion> tabla = new TableView<>();
         tabla.setItems(listaCalificaciones);
+        
+        // Estilos para mejorar la visibilidad del texto
+        tabla.setStyle(
+            "-fx-text-fill: black; " +
+            "-fx-background-color: white; " +
+            "-fx-control-inner-background: white; " +
+            "-fx-control-inner-background-alt: #f4f4f4; " +
+            "-fx-table-cell-border-color: #ddd; " +
+            "-fx-table-header-border-color: #ddd;"
+        );
 
         // Columnas
         TableColumn<Calificacion, String> colEstudianteMatricula = new TableColumn<>("Matrícula");
