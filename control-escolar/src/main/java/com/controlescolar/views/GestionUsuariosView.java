@@ -27,9 +27,16 @@ public class GestionUsuariosView extends Application {
     private Usuario usuarioActual;
     private TableView<Usuario> tablaUsuarios;
     private ObservableList<Usuario> listaUsuarios;
+    private List<Usuario> todosLosUsuarios; // Lista completa sin filtrar
     private TextField buscarField;
     private ComboBox<Rol> filtroRolCombo;
     private ComboBox<String> filtroEstadoCombo;
+    
+    // Labels para estadísticas
+    private Label totalLabel;
+    private Label activosLabel;
+    private Label inactivosLabel;
+    private Label adminsLabel;
     
     // Botones
     private Button btnAgregar;
@@ -159,18 +166,18 @@ public class GestionUsuariosView extends Application {
         estadisticas.setPadding(new Insets(10));
         estadisticas.setStyle("-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 5px;");
         
-        Label totalLabel = new Label("Total: 0");
+        totalLabel = new Label("Total: 0");
         totalLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
         
-        Label activosLabel = new Label("Activos: 0");
+        activosLabel = new Label("Activos: 0");
         activosLabel.setTextFill(Color.GREEN);
         activosLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
         
-        Label inactivosLabel = new Label("Inactivos: 0");
+        inactivosLabel = new Label("Inactivos: 0");
         inactivosLabel.setTextFill(Color.RED);
         inactivosLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
         
-        Label adminsLabel = new Label("Administradores: 0");
+        adminsLabel = new Label("Administradores: 0");
         adminsLabel.setTextFill(Color.BLUE);
         adminsLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
         
@@ -306,24 +313,61 @@ public class GestionUsuariosView extends Application {
 
     private void cargarUsuarios() {
         try {
-            List<Usuario> usuarios = UsuarioController.obtenerUsuarios();
-            listaUsuarios.clear();
-            listaUsuarios.addAll(usuarios);
-            actualizarEstadisticas();
+            todosLosUsuarios = UsuarioController.obtenerUsuarios();
+            filtrarUsuarios(); // Aplicar filtros actuales
         } catch (Exception e) {
             mostrarError("Error al cargar usuarios: " + e.getMessage());
         }
     }
 
     private void filtrarUsuarios() {
-        // Implementar filtrado por búsqueda, rol y estado
-        // Por simplicidad, aquí recargamos todo y filtramos en la vista
-        cargarUsuarios();
+        if (todosLosUsuarios == null) {
+            return;
+        }
+        
+        String textoBusqueda = buscarField != null ? buscarField.getText().toLowerCase().trim() : "";
+        Rol rolSeleccionado = filtroRolCombo != null ? filtroRolCombo.getValue() : null;
+        String estadoSeleccionado = filtroEstadoCombo != null ? filtroEstadoCombo.getValue() : "Todos";
+        
+        List<Usuario> usuariosFiltrados = todosLosUsuarios.stream()
+            .filter(usuario -> {
+                // Filtro por texto (nombre, apellidos, email)
+                boolean coincideTexto = textoBusqueda.isEmpty() || 
+                    (usuario.getNombre() != null && usuario.getNombre().toLowerCase().contains(textoBusqueda)) ||
+                    (usuario.getApellidos() != null && usuario.getApellidos().toLowerCase().contains(textoBusqueda)) ||
+                    (usuario.getEmail() != null && usuario.getEmail().toLowerCase().contains(textoBusqueda));
+                
+                // Filtro por rol
+                boolean coincideRol = rolSeleccionado == null || usuario.getRol() == rolSeleccionado;
+                
+                // Filtro por estado
+                boolean coincideEstado = "Todos".equals(estadoSeleccionado) ||
+                    ("Activos".equals(estadoSeleccionado) && usuario.isActivo()) ||
+                    ("Inactivos".equals(estadoSeleccionado) && !usuario.isActivo());
+                
+                return coincideTexto && coincideRol && coincideEstado;
+            })
+            .collect(java.util.stream.Collectors.toList());
+        
+        listaUsuarios.clear();
+        listaUsuarios.addAll(usuariosFiltrados);
+        actualizarEstadisticas();
     }
 
     private void actualizarEstadisticas() {
-        // Actualizar labels de estadísticas
-        // Esta funcionalidad se puede expandir
+        if (listaUsuarios == null || totalLabel == null) {
+            return;
+        }
+        
+        int total = listaUsuarios.size();
+        long activos = listaUsuarios.stream().filter(Usuario::isActivo).count();
+        long inactivos = total - activos;
+        long administradores = listaUsuarios.stream().filter(u -> u.getRol() == Rol.ADMINISTRADOR).count();
+        
+        totalLabel.setText("Total: " + total);
+        activosLabel.setText("Activos: " + activos);
+        inactivosLabel.setText("Inactivos: " + inactivos);
+        adminsLabel.setText("Administradores: " + administradores);
     }
 
     private void actualizarEstadoBotones() {

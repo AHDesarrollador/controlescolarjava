@@ -9,8 +9,7 @@ public enum Rol {
     PROFESOR("Profesor", "Gestión de materias y calificaciones"),
     ALUMNO("Alumno", "Consulta de información académica"),
     PADRE_FAMILIA("Padre de Familia", "Consulta de información del alumno"),
-    SECRETARIO("Secretario", "Gestión administrativa y pagos"),
-    COORDINADOR("Coordinador", "Supervisión académica");
+    SECRETARIO("Secretario", "Gestión administrativa y pagos");
 
     private final String nombre;
     private final String descripcion;
@@ -54,7 +53,7 @@ public enum Rol {
      * @return true si puede gestionar calificaciones
      */
     public boolean puedeGestionarCalificaciones() {
-        return this == ADMINISTRADOR || this == DIRECTOR || this == PROFESOR || this == COORDINADOR;
+        return this == ADMINISTRADOR || this == DIRECTOR || this == PROFESOR;
     }
 
     /**

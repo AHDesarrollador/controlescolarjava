@@ -25,7 +25,10 @@ public class GestionUsuariosDirectorView {
     private Stage primaryStage;
     private TableView<Usuario> usuariosTable;
     private ObservableList<Usuario> usuariosData;
+    private List<Usuario> todosLosUsuarios;
     private ComboBox<Rol> filtroRolCombo;
+    private TextField buscarField;
+    private ComboBox<String> filtroEstadoCombo;
 
     public GestionUsuariosDirectorView(Stage parentStage) {
         this.primaryStage = new Stage();
@@ -87,20 +90,33 @@ public class GestionUsuariosDirectorView {
         controlsPanel.setAlignment(Pos.CENTER_LEFT);
         controlsPanel.setPadding(new Insets(10));
 
+        // Campo de búsqueda
+        Label buscarLabel = new Label("Buscar:");
+        buscarField = new TextField();
+        buscarField.setPromptText("Nombre, email...");
+        buscarField.setPrefWidth(150);
+        buscarField.textProperty().addListener((obs, oldText, newText) -> aplicarFiltro());
+        
         // Filtro por rol
-        Label filtroLabel = new Label("Filtrar por rol:");
+        Label filtroLabel = new Label("Rol:");
         filtroRolCombo = new ComboBox<>();
         filtroRolCombo.getItems().addAll(
             null, // Para mostrar todos
             Rol.DIRECTOR,
             Rol.SECRETARIO,
-            Rol.COORDINADOR,
             Rol.PROFESOR,
             Rol.ALUMNO,
             Rol.PADRE_FAMILIA
         );
-        filtroRolCombo.setPromptText("Todos los roles");
+        filtroRolCombo.setPromptText("Todos");
         filtroRolCombo.setOnAction(e -> aplicarFiltro());
+        
+        // Filtro por estado
+        Label estadoLabel = new Label("Estado:");
+        filtroEstadoCombo = new ComboBox<>();
+        filtroEstadoCombo.getItems().addAll("Todos", "Activos", "Inactivos");
+        filtroEstadoCombo.setValue("Todos");
+        filtroEstadoCombo.setOnAction(e -> aplicarFiltro());
 
         // Botones de acción
         Button crearBtn = new Button("Crear Usuario");
@@ -122,7 +138,9 @@ public class GestionUsuariosDirectorView {
         actualizarBtn.setOnAction(e -> cargarUsuarios());
 
         controlsPanel.getChildren().addAll(
+            buscarLabel, buscarField,
             filtroLabel, filtroRolCombo,
+            estadoLabel, filtroEstadoCombo,
             new Separator(),
             crearBtn, editarBtn, cambiarRolBtn, activarBtn, resetPasswordBtn, actualizarBtn
         );
@@ -185,15 +203,12 @@ public class GestionUsuariosDirectorView {
 
     private void cargarUsuarios() {
         try {
-            List<Usuario> todosLosUsuarios = UsuarioController.obtenerUsuarios();
-            
-            // Filtrar para excluir administradores
-            List<Usuario> usuariosFiltrados = todosLosUsuarios.stream()
+            // Cargar todos los usuarios excepto administradores
+            todosLosUsuarios = UsuarioController.obtenerUsuarios().stream()
                 .filter(usuario -> usuario.getRol() != Rol.ADMINISTRADOR)
                 .collect(Collectors.toList());
             
-            usuariosData.clear();
-            usuariosData.addAll(usuariosFiltrados);
+            aplicarFiltro(); // Aplicar filtros actuales
             
         } catch (Exception e) {
             mostrarError("Error al cargar usuarios: " + e.getMessage());
@@ -201,30 +216,36 @@ public class GestionUsuariosDirectorView {
     }
 
     private void aplicarFiltro() {
-        Rol rolSeleccionado = filtroRolCombo.getSelectionModel().getSelectedItem();
-        
-        try {
-            List<Usuario> todosLosUsuarios = UsuarioController.obtenerUsuarios();
-            List<Usuario> usuariosFiltrados;
-            
-            if (rolSeleccionado == null) {
-                // Mostrar todos excepto administradores
-                usuariosFiltrados = todosLosUsuarios.stream()
-                    .filter(usuario -> usuario.getRol() != Rol.ADMINISTRADOR)
-                    .collect(Collectors.toList());
-            } else {
-                // Filtrar por rol específico
-                usuariosFiltrados = todosLosUsuarios.stream()
-                    .filter(usuario -> usuario.getRol() == rolSeleccionado)
-                    .collect(Collectors.toList());
-            }
-            
-            usuariosData.clear();
-            usuariosData.addAll(usuariosFiltrados);
-            
-        } catch (Exception e) {
-            mostrarError("Error al aplicar filtro: " + e.getMessage());
+        if (todosLosUsuarios == null) {
+            return;
         }
+        
+        String textoBusqueda = buscarField != null ? buscarField.getText().toLowerCase().trim() : "";
+        Rol rolSeleccionado = filtroRolCombo != null ? filtroRolCombo.getSelectionModel().getSelectedItem() : null;
+        String estadoSeleccionado = filtroEstadoCombo != null ? filtroEstadoCombo.getValue() : "Todos";
+        
+        List<Usuario> usuariosFiltrados = todosLosUsuarios.stream()
+            .filter(usuario -> {
+                // Filtro por texto (nombre, apellidos, email)
+                boolean coincideTexto = textoBusqueda.isEmpty() || 
+                    (usuario.getNombre() != null && usuario.getNombre().toLowerCase().contains(textoBusqueda)) ||
+                    (usuario.getApellidos() != null && usuario.getApellidos().toLowerCase().contains(textoBusqueda)) ||
+                    (usuario.getEmail() != null && usuario.getEmail().toLowerCase().contains(textoBusqueda));
+                
+                // Filtro por rol
+                boolean coincideRol = rolSeleccionado == null || usuario.getRol() == rolSeleccionado;
+                
+                // Filtro por estado
+                boolean coincideEstado = "Todos".equals(estadoSeleccionado) ||
+                    ("Activos".equals(estadoSeleccionado) && usuario.isActivo()) ||
+                    ("Inactivos".equals(estadoSeleccionado) && !usuario.isActivo());
+                
+                return coincideTexto && coincideRol && coincideEstado;
+            })
+            .collect(Collectors.toList());
+        
+        usuariosData.clear();
+        usuariosData.addAll(usuariosFiltrados);
     }
 
     private void mostrarDialogoCrearUsuario() {
@@ -247,7 +268,6 @@ public class GestionUsuariosDirectorView {
         rolCombo.getItems().addAll(
             Rol.DIRECTOR,
             Rol.SECRETARIO,
-            Rol.COORDINADOR,
             Rol.PROFESOR,
             Rol.ALUMNO,
             Rol.PADRE_FAMILIA
@@ -410,7 +430,6 @@ public class GestionUsuariosDirectorView {
         rolCombo.getItems().addAll(
             Rol.DIRECTOR,
             Rol.SECRETARIO,
-            Rol.COORDINADOR,
             Rol.PROFESOR,
             Rol.ALUMNO,
             Rol.PADRE_FAMILIA

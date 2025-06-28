@@ -73,6 +73,9 @@ public class Usuario {
                     rol = Rol.ALUMNO;
                 } else if ("director".equalsIgnoreCase(rolString)) {
                     rol = Rol.DIRECTOR;
+                } else if ("coordinador".equalsIgnoreCase(rolString) || "COORDINADOR".equals(rolString)) {
+                    // Convert legacy coordinator role to director (closest equivalent)
+                    rol = Rol.DIRECTOR;
                 } else {
                     // If all fails, log the issue and default to ALUMNO
                     System.err.println("Unknown role string: " + rolString + ", defaulting to ALUMNO");
